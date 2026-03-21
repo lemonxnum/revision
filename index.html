@@ -1,0 +1,4060 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#111110">
+<title>A Level Revision Planner</title>
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" type="image/png" href="icon.png">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #111110;
+  --surface: #1c1c1a;
+  --surface2: #242422;
+  --surface3: #2e2e2b;
+  --border: #333330;
+  --border2: #444440;
+  --text: #f0ede8;
+  --text-muted: #7a7770;
+  --text-dim: #4a4742;
+
+  --phy: #60a5fa;
+  --phy-bg: rgba(96,165,250,0.08);
+  --phy-border: rgba(96,165,250,0.25);
+  --mat: #fb923c;
+  --mat-bg: rgba(251,146,60,0.08);
+  --mat-border: rgba(251,146,60,0.25);
+  --bio: #4ade80;
+  --bio-bg: rgba(74,222,128,0.08);
+  --bio-border: rgba(74,222,128,0.25);
+  --free-col: #a78bfa;
+  --free-bg: rgba(167,139,250,0.08);
+
+  --red: #f87171;
+  --amber: #fbbf24;
+  --green: #4ade80;
+  --exam-col: #f87171;
+
+  --radius: 6px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: Helvetica, Arial, sans-serif;
+  min-height: 100vh;
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* TABS */
+.app-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding: 0 1.5rem;
+  padding-top: env(safe-area-inset-top);
+  overflow-x: auto;
+}
+
+.app-tab {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  padding: 0.85rem 1.2rem;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+  position: relative;
+  top: 1px;
+  white-space: nowrap;
+}
+.app-tab:hover { color: var(--text); }
+.app-tab.active { color: var(--text); border-bottom-color: var(--text); font-weight: 600; }
+
+.app-tab .badge {
+  display: inline-block;
+  margin-left: 0.4rem;
+  background: var(--red);
+  color: #fff;
+  font-size: 0.55rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 99px;
+  vertical-align: middle;
+}
+
+/* PAGE */
+.page { display: none; }
+.page.active { display: block; }
+
+/* TIMETABLE PAGE */
+.tt-wrap {
+ max-width: 1200px;
+ margin: 0 auto;
+ padding: 2rem 1.5rem 5rem;
+}
+
+.tt-header {
+ display: flex;
+ align-items: flex-end;
+ justify-content: space-between;
+ margin-bottom: 2rem;
+ flex-wrap: wrap;
+ gap: 1rem;
+}
+
+.tt-title {
+ font-family: 'DM Serif Display', serif;
+ font-size: clamp(2.5rem, 6vw, 4.5rem);
+ font-weight: 900;
+ line-height: 0.9;
+ letter-spacing: -0.02em;
+}
+
+.tt-title em { font-style: italic; color: var(--phy); }
+
+.tt-meta {
+ font-size: 0.65rem;
+ color: var(--text-muted);
+ line-height: 2;
+ text-align: right;
+}
+
+/* Phase bar */
+.phase-bar {
+ display: grid;
+ grid-template-columns: 4fr 3fr 2fr;
+ gap: 0.5rem;
+ margin-bottom: 2rem;
+}
+
+.phase-seg {
+ padding: 0.7rem 1rem;
+ border-radius: var(--radius);
+ border: 1px solid var(--border);
+ background: var(--surface);
+}
+
+.phase-seg h4 {
+ font-family: 'DM Serif Display', serif;
+ font-weight: 600;
+ font-size: 0.8rem;
+ margin-bottom: 0.25rem;
+}
+
+.phase-seg p { font-size: 0.62rem; color: var(--text-muted); line-height: 1.5; }
+
+/* Legend */
+.legend {
+ display: flex;
+ flex-wrap: wrap;
+ gap: 1rem;
+ margin-bottom: 2rem;
+ padding: 0.9rem 1.2rem;
+ background: var(--surface);
+ border-radius: var(--radius);
+ border: 1px solid var(--border);
+}
+
+.leg { display:flex; align-items:center; gap:0.4rem; font-size:0.63rem; color:var(--text-muted); }
+.leg-block { width:16px; height:10px; border-radius:2px; }
+.leg-dot { width:8px; height:8px; border-radius:50%; }
+
+/* Week nav */
+.week-nav {
+ display: flex;
+ align-items: center;
+ gap: 0.4rem;
+ margin-bottom: 1.5rem;
+ flex-wrap: wrap;
+}
+
+.wk-btn {
+ font-family: Helvetica, Arial, sans-serif;
+ font-size: 0.62rem;
+ font-weight: 600;
+ letter-spacing: 0.05em;
+ padding: 0.35rem 0.7rem;
+ border-radius: 4px;
+ border: 1px solid var(--border);
+ background: var(--surface);
+ color: var(--text-muted);
+ cursor: pointer;
+ transition: all 0.15s;
+}
+.wk-btn:hover { border-color: var(--border2); color: var(--text); }
+.wk-btn.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+.wk-btn.has-exam { border-color: var(--exam-col); color: var(--exam-col); }
+.wk-btn.has-exam.active { background: var(--exam-col); color: #fff; }
+
+/* Week panel */
+.week-panel { display: none; }
+.week-panel.active { display: block; }
+
+.week-info {
+ display: flex;
+ align-items: baseline;
+ gap: 1rem;
+ margin-bottom: 0.8rem;
+ flex-wrap: wrap;
+}
+
+.week-info h2 {
+ font-family: 'DM Serif Display', serif;
+ font-size: 1.8rem;
+ font-weight: 900;
+ line-height: 1;
+}
+
+.week-dates { font-size: 0.65rem; color: var(--text-muted); }
+
+.week-focus-bar {
+ background: var(--surface);
+ border: 1px solid var(--border);
+ border-left: 3px solid var(--phy);
+ padding: 0.6rem 1rem;
+ font-size: 0.68rem;
+ color: var(--text-muted);
+ line-height: 1.6;
+ margin-bottom: 1rem;
+ border-radius: 0 var(--radius) var(--radius) 0;
+}
+.week-focus-bar strong { color: var(--text); }
+
+/* Exam alerts */
+.exam-strip {
+ display: flex;
+ flex-wrap: wrap;
+ gap: 0.5rem;
+ margin-bottom: 1rem;
+}
+
+.exam-chip {
+ font-size: 0.62rem;
+ padding: 0.3rem 0.8rem;
+ border: 1px solid var(--exam-col);
+ color: var(--exam-col);
+ border-radius: 99px;
+ letter-spacing: 0.05em;
+}
+
+/* CALENDAR GRID */
+.cal-grid {
+ display: grid;
+ grid-template-columns: repeat(7, 1fr);
+ gap: 0.5rem;
+ margin-bottom: 1.5rem;
+}
+
+.cal-day-header {
+ font-size: 0.6rem;
+ font-weight: 600;
+ letter-spacing: 0.1em;
+ text-transform: uppercase;
+ color: var(--text-dim);
+ text-align: center;
+ padding: 0.4rem 0;
+}
+
+.cal-cell {
+ background: var(--surface);
+ border: 1px solid var(--border);
+ border-radius: var(--radius);
+ overflow: hidden;
+ min-height: 180px;
+ display: flex;
+ flex-direction: column;
+ transition: border-color 0.15s;
+}
+
+.cal-cell:hover { border-color: var(--border2); }
+.cal-cell.is-sat { opacity: 0.5; background: var(--bg); }
+.cal-cell.is-exam { border-color: var(--exam-col); border-width: 2px; }
+.cal-cell.is-sunday { border-color: var(--border2); }
+.cal-cell.is-today { border-color: var(--text) !important; border-width: 2px !important; }
+.cal-cell.is-today .cal-date-row { background: var(--text); }
+.cal-cell.is-today .cal-date-num { color: var(--bg); }
+.cal-today-label { display: none; }
+.cal-cell.is-today .cal-today-label { display: inline-block; font-size: 0.52rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.1rem 0.4rem; border-radius: 99px; background: rgba(15,15,15,0.3); color: var(--bg); }
+
+.cal-date-row {
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+ padding: 0.45rem 0.6rem 0.4rem;
+ border-bottom: 1px solid var(--border);
+ background: var(--surface2);
+ flex-shrink: 0;
+}
+
+.cal-date-num {
+ font-family: 'DM Serif Display', serif;
+ font-weight: 900;
+ font-size: 1.1rem;
+ line-height: 1;
+}
+
+.cal-exam-badge {
+ font-size: 0.52rem;
+ color: var(--exam-col);
+ letter-spacing: 0.05em;
+ text-align: right;
+ line-height: 1.3;
+}
+
+.cal-body {
+ padding: 0.4rem;
+ flex: 1;
+ display: flex;
+ flex-direction: column;
+ gap: 0.25rem;
+ overflow: hidden;
+}
+
+/* School lesson pill */
+.lesson-pill {
+ font-size: 0.56rem;
+ padding: 0.2rem 0.45rem;
+ border-radius: 3px;
+ font-weight: 600;
+ letter-spacing: 0.05em;
+ flex-shrink: 0;
+}
+.lesson-pill.phy { background: var(--phy-bg); color: var(--phy); border: 1px solid var(--phy-border); }
+.lesson-pill.mat { background: var(--mat-bg); color: var(--mat); border: 1px solid var(--mat-border); }
+.lesson-pill.bio { background: var(--bio-bg); color: var(--bio); border: 1px solid var(--bio-border); }
+.lesson-pill.other { background: var(--free-bg); color: var(--free-col); border: 1px solid rgba(192,132,252,0.3); }
+
+/* Divider between lessons and revision */
+.cal-divider {
+ height: 1px;
+ background: var(--border);
+ margin: 0.1rem 0;
+ flex-shrink: 0;
+}
+
+/* Revision slot in calendar */
+.rev-slot {
+ display: flex;
+ align-items: flex-start;
+ gap: 0.3rem;
+ padding: 0.25rem 0.4rem;
+ border-radius: 3px;
+ flex-shrink: 0;
+}
+.rev-slot.physics { background: var(--phy-bg); border-left: 2px solid var(--phy); }
+.rev-slot.maths { background: var(--mat-bg); border-left: 2px solid var(--mat); }
+.rev-slot.bio { background: var(--bio-bg); border-left: 2px solid var(--bio); }
+
+.rev-slot-dot {
+ width: 6px; height: 6px;
+ border-radius: 50%;
+ flex-shrink: 0;
+ margin-top: 2px;
+}
+.rev-slot-dot.red { background: var(--red); }
+.rev-slot-dot.amber { background: var(--amber); }
+.rev-slot-dot.green { background: var(--green); }
+
+.rev-slot-text { flex: 1; }
+.rev-slot-subj {
+ font-size: 0.52rem;
+ font-weight: 600;
+ letter-spacing: 0.08em;
+ text-transform: uppercase;
+ margin-bottom: 0.1rem;
+}
+.rev-slot.physics .rev-slot-subj { color: var(--phy); }
+.rev-slot.maths .rev-slot-subj { color: var(--mat); }
+.rev-slot.bio .rev-slot-subj { color: var(--bio); }
+
+.rev-slot-topic { font-size: 0.6rem; line-height: 1.3; color: var(--text); }
+.rev-slot-time { font-size: 0.52rem; color: var(--text-dim); margin-top: 0.1rem; }
+
+.rest-label {
+ font-size: 0.6rem;
+ color: var(--text-dim);
+ text-align: center;
+ padding: 1rem 0;
+ letter-spacing: 0.08em;
+}
+
+/* TRAFFIC LIGHT PAGE */
+.tl-wrap {
+ max-width: 1000px;
+ margin: 0 auto;
+ padding: 2rem 1.5rem 5rem;
+}
+
+.tl-header {
+ margin-bottom: 2rem;
+}
+
+.tl-header h2 {
+ font-family: 'DM Serif Display', serif;
+ font-size: clamp(2rem, 5vw, 3.5rem);
+ font-weight: 900;
+ line-height: 0.95;
+ margin-bottom: 0.5rem;
+}
+
+.tl-header h2 em { font-style: italic; color: var(--green); }
+
+.tl-header p { font-size: 0.7rem; color: var(--text-muted); line-height: 1.6; }
+
+/* Summary cards */
+.tl-summary {
+ display: grid;
+ grid-template-columns: repeat(3, 1fr);
+ gap: 1rem;
+ margin-bottom: 2rem;
+}
+
+.tl-stat {
+ background: var(--surface);
+ border: 1px solid var(--border);
+ border-radius: var(--radius);
+ padding: 1.2rem;
+ text-align: center;
+}
+
+.tl-stat .num {
+ font-family: 'DM Serif Display', serif;
+ font-size: 2.5rem;
+ font-weight: 900;
+ line-height: 1;
+ margin-bottom: 0.3rem;
+}
+
+.tl-stat .lbl { font-size: 0.62rem; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; }
+.tl-stat.red-s .num { color: var(--red); }
+.tl-stat.amb-s .num { color: var(--amber); }
+.tl-stat.grn-s .num { color: var(--green); }
+
+/* Subject tabs within TL */
+.tl-subject-tabs {
+ display: flex;
+ gap: 0.5rem;
+ margin-bottom: 1.5rem;
+}
+
+.tl-sub-btn {
+ font-family: Helvetica, Arial, sans-serif;
+ font-size: 0.68rem;
+ font-weight: 600;
+ letter-spacing: 0.08em;
+ text-transform: uppercase;
+ padding: 0.5rem 1.2rem;
+ border-radius: var(--radius);
+ border: 1px solid var(--border);
+ background: var(--surface);
+ color: var(--text-muted);
+ cursor: pointer;
+ transition: all 0.15s;
+}
+.tl-sub-btn:hover { color: var(--text); border-color: var(--border2); }
+.tl-sub-btn.active.phy { background: var(--phy-bg); border-color: var(--phy-border); color: var(--phy); }
+.tl-sub-btn.active.mat { background: var(--mat-bg); border-color: var(--mat-border); color: var(--mat); }
+.tl-sub-btn.active.bio { background: var(--bio-bg); border-color: var(--bio-border); color: var(--bio); }
+
+
+/* TL Search */
+.tl-search-wrap {
+  margin-bottom: 1rem;
+}
+
+.tl-search-input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 0.65rem 1rem;
+  color: var(--text);
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 0.82rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.tl-search-input:focus { border-color: var(--phy); }
+.tl-search-input::placeholder { color: var(--text-dim); }
+
+.tl-topic-row.tl-hidden { display: none; }
+.tl-section.tl-section-hidden { display: none; }
+
+/* TL subject panel */
+.tl-subject-panel { display: none; }
+.tl-subject-panel.active { display: block; }
+
+/* Progress bar */
+.tl-prog-wrap { margin-bottom: 1.5rem; }
+.tl-prog-label {
+ display: flex;
+ justify-content: space-between;
+ font-size: 0.62rem;
+ color: var(--text-muted);
+ margin-bottom: 0.4rem;
+}
+.tl-prog-bar {
+ height: 4px;
+ background: var(--surface3);
+ border-radius: 99px;
+ overflow: hidden;
+}
+.tl-prog-inner {
+ height: 100%;
+ background: linear-gradient(90deg, var(--red), var(--amber), var(--green));
+ border-radius: 99px;
+ transition: width 0.4s ease;
+}
+
+/* Section */
+.tl-section {
+ background: var(--surface);
+ border: 1px solid var(--border);
+ border-radius: var(--radius);
+ margin-bottom: 0.75rem;
+ overflow: hidden;
+}
+
+.tl-sec-header {
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+ padding: 0.65rem 1rem;
+ background: var(--surface2);
+ border-bottom: 1px solid var(--border);
+ cursor: pointer;
+ user-select: none;
+ font-size: 0.68rem;
+ font-weight: 600;
+ letter-spacing: 0.06em;
+ color: var(--text-muted);
+ transition: color 0.15s;
+}
+.tl-sec-header:hover { color: var(--text); }
+.tl-sec-chevron { transition: transform 0.2s; font-size: 0.55rem; }
+.tl-section.collapsed .tl-sec-chevron { transform: rotate(-90deg); }
+.tl-section.collapsed .tl-sec-body { display: none; }
+
+.tl-sec-body { padding: 0.35rem; }
+
+/* Topic row */
+.tl-topic-row {
+ display: flex;
+ align-items: center;
+ justify-content: space-between;
+ padding: 0.45rem 0.65rem;
+ border-radius: 5px;
+ gap: 0.8rem;
+ transition: background 0.12s;
+}
+.tl-topic-row:hover { background: var(--surface2); }
+.tl-topic-row.is-red { background: rgba(255,68,68,0.05); }
+.tl-topic-row.is-amber { background: rgba(255,170,0,0.05); }
+.tl-topic-row.is-green { background: rgba(34,197,94,0.05); }
+
+.tl-topic-name { flex: 1; font-size: 0.75rem; line-height: 1.35; }
+
+.tl-btns { display: flex; gap: 0.3rem; flex-shrink: 0; }
+
+.tl-btn {
+ width: 26px; height: 26px;
+ border-radius: 50%;
+ border: 2px solid transparent;
+ cursor: pointer;
+ display: flex; align-items: center; justify-content: center;
+ background: var(--surface3);
+ transition: all 0.15s;
+ opacity: 0.3;
+}
+.tl-btn::after {
+ content: '';
+ width: 9px; height: 9px;
+ border-radius: 50%;
+}
+.tl-btn.red::after { background: var(--red); }
+.tl-btn.amber::after { background: var(--amber); }
+.tl-btn.green::after { background: var(--green); }
+.tl-btn:hover { opacity: 0.7; transform: scale(1.1); }
+.tl-btn.sel { opacity: 1; }
+.tl-btn.sel.red { border-color: var(--red); background: rgba(255,68,68,0.15); box-shadow: 0 0 8px rgba(255,68,68,0.25); }
+.tl-btn.sel.amber { border-color: var(--amber); background: rgba(255,170,0,0.15); box-shadow: 0 0 8px rgba(255,170,0,0.25); }
+.tl-btn.sel.green { border-color: var(--green); background: rgba(34,197,94,0.15); box-shadow: 0 0 8px rgba(34,197,94,0.25); }
+
+/* TODAY PAGE */
+.today-wrap {
+ max-width: 700px;
+ margin: 0 auto;
+ padding: 2rem 1.5rem 5rem;
+}
+
+.today-date-banner {
+ margin-bottom: 2rem;
+}
+
+.today-date-banner .day-label {
+ font-size: 0.68rem;
+ letter-spacing: 0.2em;
+ text-transform: uppercase;
+ color: var(--text-muted);
+ margin-bottom: 0.3rem;
+}
+
+.today-date-banner h2 {
+ font-family: 'DM Serif Display', serif;
+ font-size: clamp(2.2rem, 6vw, 3.5rem);
+ font-weight: 900;
+ line-height: 0.95;
+ letter-spacing: -0.02em;
+}
+
+.today-date-banner h2 em { font-style: italic; color: var(--phy); }
+
+.today-progress {
+ display: flex;
+ align-items: center;
+ gap: 1rem;
+ margin-top: 0.8rem;
+ flex-wrap: wrap;
+}
+
+.today-progress-bar-wrap {
+ flex: 1;
+ min-width: 120px;
+ background: var(--surface3);
+ border-radius: 99px;
+ height: 5px;
+ overflow: hidden;
+}
+
+.today-progress-bar {
+ height: 100%;
+ background: var(--green);
+ border-radius: 99px;
+ transition: width 0.4s ease;
+}
+
+.today-progress-label {
+ font-size: 0.65rem;
+ color: var(--text-muted);
+ white-space: nowrap;
+}
+
+/* Exam warning banner */
+.today-exam-banner {
+ background: rgba(255,68,68,0.08);
+ border: 1px solid var(--exam-col);
+ border-radius: var(--radius);
+ padding: 1rem 1.2rem;
+ margin-bottom: 1.5rem;
+ display: flex;
+ align-items: center;
+ gap: 0.8rem;
+}
+
+.today-exam-banner .exam-icon { font-size: 1.5rem; }
+.today-exam-banner .exam-text { flex: 1; }
+.today-exam-banner .exam-text strong { display: block; color: var(--exam-col); font-size: 0.85rem; margin-bottom: 0.2rem; }
+.today-exam-banner .exam-text span { font-size: 0.68rem; color: var(--text-muted); }
+
+/* School lessons section */
+.today-section-label {
+ font-size: 0.62rem;
+ letter-spacing: 0.15em;
+ text-transform: uppercase;
+ color: var(--text-dim);
+ margin-bottom: 0.6rem;
+ margin-top: 1.5rem;
+}
+
+/* Revision slot card */
+.today-slot-card {
+ background: var(--surface);
+ border: 1px solid var(--border);
+ border-radius: var(--radius);
+ margin-bottom: 0.75rem;
+ overflow: hidden;
+ transition: border-color 0.2s;
+}
+
+.today-slot-card.done {
+ border-color: var(--green);
+ opacity: 0.7;
+}
+
+.today-slot-card.done .today-slot-body {
+ background: rgba(34,197,94,0.04);
+}
+
+.today-slot-header {
+ display: flex;
+ align-items: center;
+ justify-content: space-between;
+ padding: 0.65rem 1rem;
+ border-bottom: 1px solid var(--border);
+ background: var(--surface2);
+}
+
+.today-slot-subj {
+ font-size: 0.65rem;
+ font-weight: 600;
+ letter-spacing: 0.1em;
+ text-transform: uppercase;
+}
+
+.today-slot-subj.physics { color: var(--phy); }
+.today-slot-subj.maths { color: var(--mat); }
+.today-slot-subj.bio { color: var(--bio); }
+
+.today-slot-time-loc {
+ font-size: 0.62rem;
+ color: var(--text-muted);
+}
+
+.today-slot-body {
+ padding: 1rem;
+ display: flex;
+ align-items: flex-start;
+ gap: 1rem;
+}
+
+.today-slot-info { flex: 1; }
+
+.today-slot-topic {
+ font-size: 0.95rem;
+ line-height: 1.35;
+ margin-bottom: 0.4rem;
+ font-family: 'DM Serif Display', serif;
+ font-weight: 600;
+}
+
+.today-slot-meta {
+ display: flex;
+ align-items: center;
+ gap: 0.6rem;
+ flex-wrap: wrap;
+}
+
+.today-rating-dot {
+ width: 8px; height: 8px;
+ border-radius: 50%;
+ flex-shrink: 0;
+}
+.today-rating-dot.red { background: var(--red); }
+.today-rating-dot.amber { background: var(--amber); }
+.today-rating-dot.green { background: var(--green); }
+
+.today-rating-label {
+ font-size: 0.62rem;
+ color: var(--text-muted);
+}
+
+/* Tick button */
+.tick-btn {
+ width: 42px; height: 42px;
+ border-radius: 50%;
+ border: 2px solid var(--border2);
+ background: var(--surface3);
+ color: var(--text-muted);
+ font-size: 1.1rem;
+ cursor: pointer;
+ display: flex; align-items: center; justify-content: center;
+ flex-shrink: 0;
+ transition: all 0.2s;
+}
+.tick-btn:hover { border-color: var(--green); color: var(--green); transform: scale(1.08); }
+.tick-btn.ticked { background: var(--green); border-color: var(--green); color: #fff; box-shadow: 0 0 12px rgba(34,197,94,0.3); }
+
+/* Done overlay on topic */
+.done-strike {
+ text-decoration: line-through;
+ opacity: 0.5;
+}
+
+/* Rest day screen */
+.rest-screen {
+ text-align: center;
+ padding: 4rem 2rem;
+}
+
+.rest-screen .rest-icon { font-size: 3rem; margin-bottom: 1rem; }
+
+.rest-screen h3 {
+ font-family: 'DM Serif Display', serif;
+ font-size: 2rem;
+ font-weight: 900;
+ margin-bottom: 0.5rem;
+}
+
+.rest-screen p { font-size: 0.75rem; color: var(--text-muted); line-height: 1.6; }
+
+/* Rating prompt modal */
+.modal-overlay {
+ position: fixed;
+ inset: 0;
+ background: rgba(0,0,0,0.7);
+ z-index: 200;
+ display: none;
+ align-items: center;
+ justify-content: center;
+ padding: 1rem;
+}
+.modal-overlay.open { display: flex; }
+
+.modal-box {
+ background: var(--surface);
+ border: 1px solid var(--border2);
+ border-radius: 12px;
+ padding: 1.5rem;
+ max-width: 420px;
+ width: 100%;
+}
+
+.modal-box h3 {
+ font-family: 'DM Serif Display', serif;
+ font-size: 1.3rem;
+ font-weight: 900;
+ margin-bottom: 0.3rem;
+}
+
+.modal-box .modal-topic {
+ font-size: 0.75rem;
+ color: var(--text-muted);
+ margin-bottom: 1.2rem;
+ line-height: 1.5;
+}
+
+.modal-rating-btns {
+ display: flex;
+ gap: 0.75rem;
+ margin-bottom: 1rem;
+}
+
+.modal-rating-btn {
+ flex: 1;
+ padding: 0.75rem;
+ border-radius: var(--radius);
+ border: 2px solid transparent;
+ cursor: pointer;
+ font-family: Helvetica, Arial, sans-serif;
+ font-size: 0.68rem;
+ font-weight: 600;
+ letter-spacing: 0.05em;
+ text-transform: uppercase;
+ transition: all 0.15s;
+ display: flex;
+ flex-direction: column;
+ align-items: center;
+ gap: 0.3rem;
+}
+
+.modal-rating-btn .dot {
+ width: 12px; height: 12px;
+ border-radius: 50%;
+}
+
+.modal-rating-btn.red-btn { background: rgba(255,68,68,0.1); color: var(--red); border-color: rgba(255,68,68,0.3); }
+.modal-rating-btn.amb-btn { background: rgba(255,170,0,0.1); color: var(--amber); border-color: rgba(255,170,0,0.3); }
+.modal-rating-btn.grn-btn { background: rgba(34,197,94,0.1); color: var(--green); border-color: rgba(34,197,94,0.3); }
+.modal-rating-btn:hover { transform: translateY(-2px); filter: brightness(1.2); }
+
+.modal-skip {
+ font-family: Helvetica, Arial, sans-serif;
+ font-size: 0.62rem;
+ color: var(--text-dim);
+ background: none;
+ border: none;
+ cursor: pointer;
+ width: 100%;
+ text-align: center;
+ padding: 0.4rem;
+ letter-spacing: 0.05em;
+ text-transform: uppercase;
+}
+.modal-skip:hover { color: var(--text-muted); }
+
+.today-school-pill {
+ display: flex;
+ align-items: center;
+ gap: 0.8rem;
+ padding: 0.65rem 1rem;
+ background: var(--surface);
+ border: 1px solid var(--border);
+ border-radius: var(--radius);
+ margin-bottom: 0.5rem;
+}
+.today-school-pill .pill-time { font-size: 0.65rem; color: var(--text-muted); min-width: 40px; }
+.today-school-pill .pill-name { font-size: 0.78rem; font-weight: 600; }
+.today-school-pill .pill-name.phy { color: var(--phy); }
+.today-school-pill .pill-name.mat { color: var(--mat); }
+.today-school-pill .pill-name.bio { color: var(--bio); }
+.today-school-pill .pill-name.other { color: var(--free-col); }
+
+/* COUNTDOWN PAGE */
+.countdown-grid {
+ display: flex;
+ flex-direction: column;
+ gap: 0.75rem;
+ margin-bottom: 2rem;
+}
+
+.countdown-card {
+ background: var(--surface);
+ border: 1px solid var(--border);
+ border-radius: var(--radius);
+ padding: 1rem 1.2rem;
+ display: flex;
+ align-items: center;
+ justify-content: space-between;
+ gap: 1rem;
+ flex-wrap: wrap;
+}
+
+.countdown-card.physics-card { border-left: 3px solid var(--phy); }
+.countdown-card.maths-card { border-left: 3px solid var(--mat); }
+.countdown-card.bio-card { border-left: 3px solid var(--bio); }
+
+.countdown-card .exam-name {
+ font-family: 'DM Serif Display', serif;
+ font-weight: 600;
+ font-size: 0.95rem;
+ margin-bottom: 0.2rem;
+}
+
+.countdown-card .exam-date-label {
+ font-size: 0.62rem;
+ color: var(--text-muted);
+}
+
+.countdown-card .days-left {
+ font-family: 'DM Serif Display', serif;
+ font-weight: 900;
+ font-size: 2rem;
+ line-height: 1;
+ text-align: right;
+}
+
+.countdown-card .days-left span {
+ display: block;
+ font-family: Helvetica, Arial, sans-serif;
+ font-size: 0.58rem;
+ font-weight: 400;
+ color: var(--text-muted);
+ letter-spacing: 0.1em;
+ text-transform: uppercase;
+ margin-top: 0.2rem;
+}
+
+.countdown-card.physics-card .days-left { color: var(--phy); }
+.countdown-card.maths-card .days-left { color: var(--mat); }
+.countdown-card.bio-card .days-left { color: var(--bio); }
+
+.countdown-card .lessons-left {
+ font-size: 0.68rem;
+ color: var(--text-muted);
+ text-align: right;
+}
+
+.countdown-card .lessons-left strong { color: var(--text); font-size: 0.85rem; }
+
+.countdown-section-label {
+ font-size: 0.62rem;
+ letter-spacing: 0.15em;
+ text-transform: uppercase;
+ color: var(--text-dim);
+ margin: 1.5rem 0 0.6rem;
+}
+
+/* PAST PAPERS PAGE */
+.pp-stats-bar {
+ display: flex;
+ gap: 1rem;
+ margin-bottom: 1.5rem;
+ flex-wrap: wrap;
+}
+
+.pp-stat {
+ background: var(--surface);
+ border: 1px solid var(--border);
+ border-radius: var(--radius);
+ padding: 0.75rem 1.2rem;
+ text-align: center;
+ min-width: 70px;
+}
+
+.pp-stat-num {
+ display: block;
+ font-family: 'DM Serif Display', serif;
+ font-size: 1.8rem;
+ font-weight: 900;
+ line-height: 1;
+ margin-bottom: 0.2rem;
+}
+
+.pp-stat-num.done-col { color: var(--green); }
+.pp-stat-num.inprog-col { color: var(--amber); }
+
+.pp-stat-lbl {
+ font-size: 0.58rem;
+ color: var(--text-muted);
+ letter-spacing: 0.1em;
+ text-transform: uppercase;
+}
+
+.pp-year-group { margin-bottom: 1.5rem; }
+
+.pp-year-label {
+ font-family: 'DM Serif Display', serif;
+ font-weight: 900;
+ font-size: 1.1rem;
+ color: var(--text-muted);
+ margin-bottom: 0.5rem;
+ padding-bottom: 0.4rem;
+ border-bottom: 1px solid var(--border);
+}
+
+.pp-row {
+ display: flex;
+ align-items: center;
+ justify-content: space-between;
+ padding: 0.75rem 1rem;
+ background: var(--surface);
+ border: 1px solid var(--border);
+ border-radius: var(--radius);
+ margin-bottom: 0.4rem;
+ gap: 1rem;
+ flex-wrap: wrap;
+ transition: border-color 0.15s;
+}
+
+.pp-row.done { border-color: rgba(34,197,94,0.3); background: rgba(34,197,94,0.04); }
+.pp-row.inprogress { border-color: rgba(255,170,0,0.3); background: rgba(255,170,0,0.04); }
+
+.pp-row-left { flex: 1; }
+
+.pp-row-name {
+ font-family: 'DM Serif Display', serif;
+ font-weight: 600;
+ font-size: 0.95rem;
+ margin-bottom: 0.3rem;
+}
+
+.pp-row-meta {
+ display: flex;
+ align-items: center;
+ gap: 0.6rem;
+ flex-wrap: wrap;
+}
+
+.pp-status-badge {
+ font-size: 0.6rem;
+ padding: 0.15rem 0.5rem;
+ border-radius: 99px;
+ letter-spacing: 0.05em;
+}
+
+.pp-status-badge.done { background: rgba(34,197,94,0.15); color: var(--green); }
+.pp-status-badge.inprog { background: rgba(255,170,0,0.15); color: var(--amber); }
+.pp-status-badge.notstarted { color: var(--text-dim); }
+
+.pp-score-display {
+ font-family: 'DM Serif Display', serif;
+ font-weight: 700;
+ font-size: 0.85rem;
+ color: var(--green);
+}
+
+.pp-date-display {
+ font-size: 0.6rem;
+ color: var(--text-dim);
+}
+
+.pp-row-actions {
+ display: flex;
+ gap: 0.4rem;
+ flex-wrap: wrap;
+ flex-shrink: 0;
+}
+
+.pp-action-btn {
+ font-family: Helvetica, Arial, sans-serif;
+ font-size: 0.6rem;
+ font-weight: 600;
+ letter-spacing: 0.04em;
+ padding: 0.35rem 0.7rem;
+ border-radius: 5px;
+ border: 1px solid var(--border2);
+ background: var(--surface2);
+ color: var(--text-muted);
+ cursor: pointer;
+ transition: all 0.15s;
+ white-space: nowrap;
+}
+
+.pp-action-btn:hover { color: var(--text); border-color: var(--text); }
+.pp-action-btn.done-btn { border-color: rgba(34,197,94,0.4); color: var(--green); background: rgba(34,197,94,0.08); }
+.pp-action-btn.done-btn:hover { background: rgba(34,197,94,0.15); }
+.pp-action-btn.inprog-btn { border-color: rgba(255,170,0,0.4); color: var(--amber); background: rgba(255,170,0,0.08); }
+.pp-action-btn.inprog-btn:hover { background: rgba(255,170,0,0.15); }
+.pp-action-btn.reset-btn:hover { border-color: var(--red); color: var(--red); }
+
+.pp-subject-tabs {
+ display: flex;
+ gap: 0.5rem;
+ margin-bottom: 1.5rem;
+ flex-wrap: wrap;
+}
+
+.pp-sub-btn {
+ font-family: Helvetica, Arial, sans-serif;
+ font-size: 0.68rem;
+ font-weight: 600;
+ letter-spacing: 0.08em;
+ text-transform: uppercase;
+ padding: 0.5rem 1.2rem;
+ border-radius: var(--radius);
+ border: 1px solid var(--border);
+ background: var(--surface);
+ color: var(--text-muted);
+ cursor: pointer;
+ transition: all 0.15s;
+}
+.pp-sub-btn:hover { color: var(--text); border-color: var(--border2); }
+.pp-sub-btn.active.phy { background: var(--phy-bg); border-color: var(--phy-border); color: var(--phy); }
+.pp-sub-btn.active.mat { background: var(--mat-bg); border-color: var(--mat-border); color: var(--mat); }
+.pp-sub-btn.active.bio { background: var(--bio-bg); border-color: var(--bio-border); color: var(--bio); }
+
+.pp-subject-panel { display: none; }
+.pp-subject-panel.active { display: block; }
+
+.pp-card {
+ background: var(--surface);
+ border: 1px solid var(--border);
+ border-radius: var(--radius);
+ margin-bottom: 0.75rem;
+ overflow: hidden;
+}
+
+.pp-card.done-card { opacity: 0.55; border-style: dashed; }
+
+.pp-card-header {
+ display: flex;
+ align-items: center;
+ justify-content: space-between;
+ padding: 0.7rem 1rem;
+ background: var(--surface2);
+ border-bottom: 1px solid var(--border);
+ gap: 0.5rem;
+ flex-wrap: wrap;
+}
+
+.pp-card-title {
+ font-family: 'DM Serif Display', serif;
+ font-weight: 600;
+ font-size: 0.9rem;
+}
+
+.pp-card-year {
+ font-size: 0.62rem;
+ color: var(--text-muted);
+ letter-spacing: 0.08em;
+}
+
+.pp-recommended {
+ font-size: 0.58rem;
+ padding: 0.2rem 0.55rem;
+ border-radius: 99px;
+ background: rgba(255,170,0,0.15);
+ color: var(--amber);
+ border: 1px solid rgba(255,170,0,0.3);
+ letter-spacing: 0.05em;
+ text-transform: uppercase;
+}
+
+.pp-card-body {
+ padding: 0.8rem 1rem;
+ display: flex;
+ align-items: center;
+ justify-content: space-between;
+ gap: 1rem;
+ flex-wrap: wrap;
+}
+
+.pp-links { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+.pp-link {
+ font-size: 0.65rem;
+ padding: 0.35rem 0.8rem;
+ border-radius: 5px;
+ border: 1px solid var(--border2);
+ color: var(--text-muted);
+ text-decoration: none;
+ transition: all 0.15s;
+ background: var(--surface3);
+}
+.pp-link:hover { color: var(--text); border-color: var(--text); }
+.pp-link.qp { border-color: var(--phy-border); color: var(--phy); background: var(--phy-bg); }
+.pp-link.ms { border-color: var(--bio-border); color: var(--bio); background: var(--bio-bg); }
+
+.pp-mark-btn {
+ font-family: Helvetica, Arial, sans-serif;
+ font-size: 0.65rem;
+ font-weight: 600;
+ padding: 0.4rem 0.9rem;
+ border-radius: 5px;
+ border: 1px solid var(--green);
+ background: rgba(34,197,94,0.1);
+ color: var(--green);
+ cursor: pointer;
+ transition: all 0.15s;
+ white-space: nowrap;
+}
+.pp-mark-btn:hover { background: rgba(34,197,94,0.2); }
+
+/* Score modal */
+.score-modal-overlay {
+ position: fixed;
+ inset: 0;
+ background: rgba(0,0,0,0.7);
+ z-index: 300;
+ display: none;
+ align-items: center;
+ justify-content: center;
+ padding: 1rem;
+}
+.score-modal-overlay.open { display: flex; }
+
+.score-modal {
+ background: var(--surface);
+ border: 1px solid var(--border2);
+ border-radius: 12px;
+ padding: 1.5rem;
+ max-width: 360px;
+ width: 100%;
+}
+
+.score-modal h3 {
+ font-family: 'DM Serif Display', serif;
+ font-size: 1.2rem;
+ font-weight: 900;
+ margin-bottom: 0.25rem;
+}
+
+.score-modal .score-paper-label {
+ font-size: 0.68rem;
+ color: var(--text-muted);
+ margin-bottom: 1.2rem;
+}
+
+.score-field label {
+ display: block;
+ font-size: 0.62rem;
+ letter-spacing: 0.1em;
+ text-transform: uppercase;
+ color: var(--text-muted);
+ margin-bottom: 0.4rem;
+}
+
+.score-field input {
+ width: 100%;
+ background: var(--surface2);
+ border: 1px solid var(--border2);
+ border-radius: var(--radius);
+ padding: 0.65rem 1rem;
+ color: var(--text);
+ font-family: Helvetica, Arial, sans-serif;
+ font-size: 0.85rem;
+ outline: none;
+ margin-bottom: 1rem;
+ transition: border-color 0.2s;
+}
+.score-field input:focus { border-color: var(--green); }
+
+.score-save-btn {
+ width: 100%;
+ padding: 0.75rem;
+ background: var(--green);
+ color: #fff;
+ border: none;
+ border-radius: var(--radius);
+ font-family: 'DM Serif Display', serif;
+ font-size: 0.95rem;
+ font-weight: 600;
+ cursor: pointer;
+ margin-bottom: 0.5rem;
+ transition: all 0.2s;
+}
+.score-save-btn:hover { background: #34d468; }
+
+.score-cancel-btn {
+ width: 100%;
+ background: none;
+ border: none;
+ color: var(--text-dim);
+ font-family: Helvetica, Arial, sans-serif;
+ font-size: 0.62rem;
+ cursor: pointer;
+ padding: 0.3rem;
+ letter-spacing: 0.08em;
+ text-transform: uppercase;
+}
+
+/* Completed papers list */
+.completed-paper-row {
+ display: flex;
+ align-items: center;
+ justify-content: space-between;
+ padding: 0.55rem 0.8rem;
+ background: var(--surface2);
+ border-radius: 5px;
+ margin-bottom: 0.4rem;
+ gap: 0.5rem;
+ flex-wrap: wrap;
+}
+
+.completed-paper-name { font-size: 0.72rem; flex: 1; }
+.completed-paper-score { font-family: 'DM Serif Display', serif; font-weight: 700; font-size: 0.9rem; color: var(--green); }
+.completed-paper-date { font-size: 0.6rem; color: var(--text-dim); }
+
+.completed-paper-remove {
+ background: none;
+ border: none;
+ color: var(--text-dim);
+ cursor: pointer;
+ font-size: 0.7rem;
+ padding: 0.2rem 0.4rem;
+ border-radius: 3px;
+ transition: color 0.15s;
+}
+.completed-paper-remove:hover { color: var(--red); }
+
+/* RESOURCES PAGE */
+.resources-grid {
+ display: grid;
+ grid-template-columns: repeat(3, 1fr);
+ gap: 1.2rem;
+}
+
+@media (max-width: 700px) {
+ .resources-grid { grid-template-columns: 1fr; }
+}
+
+.resources-col {
+ background: var(--surface);
+ border: 1px solid var(--border);
+ border-radius: var(--radius);
+ overflow: hidden;
+}
+
+.resources-col-header {
+ display: flex;
+ align-items: center;
+ gap: 0.6rem;
+ padding: 0.85rem 1rem;
+ font-family: 'DM Serif Display', serif;
+ font-weight: 700;
+ font-size: 1rem;
+ border-bottom: 1px solid var(--border);
+ background: var(--surface2);
+}
+
+.resources-col-dot {
+ width: 10px;
+ height: 10px;
+ border-radius: 50%;
+ flex-shrink: 0;
+}
+
+.resources-col-body {
+ padding: 0.75rem;
+ display: flex;
+ flex-direction: column;
+ gap: 0.4rem;
+}
+
+.resources-group-label {
+ font-size: 0.58rem;
+ letter-spacing: 0.12em;
+ text-transform: uppercase;
+ color: var(--text-dim);
+ margin-top: 0.6rem;
+ margin-bottom: 0.1rem;
+ padding-left: 0.2rem;
+}
+
+.resources-group-label:first-child { margin-top: 0; }
+
+.res-btn {
+ display: block;
+ width: 100%;
+ padding: 0.65rem 0.9rem;
+ border-radius: 6px;
+ font-family: Helvetica, Arial, sans-serif;
+ font-size: 0.7rem;
+ font-weight: 600;
+ text-decoration: none;
+ text-align: left;
+ transition: all 0.15s;
+ border: 1px solid transparent;
+ cursor: pointer;
+}
+
+/* Physics solid */
+.phy-btn { background: var(--phy-bg); color: var(--phy); border-color: var(--phy-border); }
+.phy-btn:hover { background: rgba(74,158,255,0.2); }
+
+/* Physics outline (papers) */
+.phy-btn-outline { background: transparent; color: var(--phy); border-color: var(--phy-border); opacity: 0.75; }
+.phy-btn-outline:hover { opacity: 1; background: var(--phy-bg); }
+
+/* Maths solid */
+.mat-btn { background: var(--mat-bg); color: var(--mat); border-color: var(--mat-border); }
+.mat-btn:hover { background: rgba(255,159,74,0.2); }
+
+/* Maths outline */
+.mat-btn-outline { background: transparent; color: var(--mat); border-color: var(--mat-border); opacity: 0.75; }
+.mat-btn-outline:hover { opacity: 1; background: var(--mat-bg); }
+
+/* Bio solid */
+.bio-btn { background: var(--bio-bg); color: var(--bio); border-color: var(--bio-border); }
+.bio-btn:hover { background: rgba(74,255,159,0.2); }
+
+/* Bio outline */
+.bio-btn-outline { background: transparent; color: var(--bio); border-color: var(--bio-border); opacity: 0.75; }
+.bio-btn-outline:hover { opacity: 1; background: var(--bio-bg); }
+
+/* DAY DETAIL OVERLAY */
+.day-overlay {
+ position: fixed;
+ inset: 0;
+ background: rgba(0,0,0,0.75);
+ z-index: 250;
+ display: none;
+ align-items: flex-end;
+ justify-content: center;
+ padding: 1rem;
+}
+
+.day-overlay.open {
+ display: flex;
+}
+
+@media (min-width: 600px) {
+ .day-overlay { align-items: center; }
+}
+
+.day-overlay-box {
+ background: var(--surface);
+ border: 1px solid var(--border2);
+ border-radius: 14px;
+ width: 100%;
+ max-width: 560px;
+ max-height: 88vh;
+ display: flex;
+ flex-direction: column;
+ overflow: hidden;
+}
+
+.day-overlay-header {
+ display: flex;
+ align-items: flex-start;
+ justify-content: space-between;
+ padding: 1.2rem 1.4rem 1rem;
+ border-bottom: 1px solid var(--border);
+ flex-shrink: 0;
+ background: var(--surface2);
+}
+
+.day-overlay-label {
+ font-size: 0.62rem;
+ letter-spacing: 0.15em;
+ text-transform: uppercase;
+ color: var(--text-muted);
+ margin-bottom: 0.25rem;
+}
+
+.day-overlay-title {
+ font-family: 'DM Serif Display', serif;
+ font-weight: 900;
+ font-size: 1.6rem;
+ line-height: 1;
+}
+
+.day-overlay-close {
+ background: var(--surface3);
+ border: 1px solid var(--border2);
+ color: var(--text-muted);
+ width: 32px;
+ height: 32px;
+ border-radius: 50%;
+ cursor: pointer;
+ font-size: 0.8rem;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ flex-shrink: 0;
+ transition: all 0.15s;
+}
+.day-overlay-close:hover { color: var(--text); border-color: var(--text); background: var(--surface2); }
+
+.day-overlay-body {
+ overflow-y: auto;
+ padding: 1rem 1.2rem 1.5rem;
+ flex: 1;
+}
+
+/* Progress bar in overlay */
+.overlay-progress-wrap {
+ margin-bottom: 1.2rem;
+}
+
+.overlay-progress-bar-outer {
+ background: var(--surface3);
+ border-radius: 99px;
+ height: 5px;
+ overflow: hidden;
+ margin-top: 0.4rem;
+}
+
+.overlay-progress-bar-inner {
+ height: 100%;
+ background: var(--green);
+ border-radius: 99px;
+ transition: width 0.4s ease;
+}
+
+.overlay-progress-label {
+ font-size: 0.62rem;
+ color: var(--text-muted);
+ display: flex;
+ justify-content: space-between;
+}
+
+/* Make calendar cells clickable */
+.cal-cell { cursor: pointer; }
+.cal-cell.is-sat { cursor: default; }
+.cal-cell:not(.is-sat):hover { border-color: var(--text); }
+
+/* PP TERMINAL */
+.pp-terminal {
+ background: var(--surface);
+ border: 1px solid var(--border2);
+ border-radius: var(--radius);
+ overflow: hidden;
+ margin-bottom: 0.5rem;
+}
+
+.pp-terminal-header {
+ background: var(--surface2);
+ border-bottom: 1px solid var(--border);
+ padding: 0.75rem 1.1rem;
+ font-family: 'DM Serif Display', serif;
+ font-weight: 600;
+ font-size: 0.9rem;
+}
+
+.pp-terminal-body {
+ padding: 1.1rem;
+ display: flex;
+ flex-direction: column;
+ gap: 0.9rem;
+}
+
+.pp-form-row {
+ display: flex;
+ gap: 0.75rem;
+ flex-wrap: wrap;
+}
+
+.pp-form-field {
+ flex: 1;
+ min-width: 120px;
+}
+
+.pp-form-label {
+ display: block;
+ font-size: 0.6rem;
+ letter-spacing: 0.1em;
+ text-transform: uppercase;
+ color: var(--text-muted);
+ margin-bottom: 0.4rem;
+}
+
+.pp-select, .pp-input {
+ width: 100%;
+ background: var(--surface2);
+ border: 1px solid var(--border2);
+ border-radius: 6px;
+ padding: 0.6rem 0.8rem;
+ color: var(--text);
+ font-family: Helvetica, Arial, sans-serif;
+ font-size: 0.78rem;
+ outline: none;
+ transition: border-color 0.2s;
+ appearance: none;
+ -webkit-appearance: none;
+}
+
+.pp-select:focus, .pp-input:focus { border-color: var(--phy); }
+.pp-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.8rem center; padding-right: 2rem; }
+
+.pp-form-actions {
+ display: flex;
+ gap: 0.6rem;
+ flex-wrap: wrap;
+}
+
+/* Completed row */
+.pp-completed-row {
+ display: flex;
+ align-items: center;
+ gap: 0.8rem;
+ padding: 0.75rem 1rem;
+ background: var(--surface);
+ border: 1px solid var(--border);
+ border-radius: var(--radius);
+ margin-bottom: 0.4rem;
+ flex-wrap: wrap;
+}
+
+.pp-completed-badge {
+ font-size: 0.6rem;
+ font-weight: 600;
+ letter-spacing: 0.08em;
+ text-transform: uppercase;
+ padding: 0.25rem 0.6rem;
+ border-radius: 99px;
+ border: 1px solid;
+ flex-shrink: 0;
+}
+
+.pp-completed-info { flex: 1; }
+.pp-completed-name { font-family: 'DM Serif Display', serif; font-weight: 600; font-size: 0.9rem; margin-bottom: 0.25rem; }
+.pp-completed-meta { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; }
+.pp-time-display { font-size: 0.62rem; color: var(--text-muted); }
+
+
+/* PP Timer */
+.pp-timer-display {
+  font-family: 'DM Serif Display', serif;
+  font-size: 2.8rem;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  text-align: center;
+  padding: 1.2rem 0 0.8rem;
+  color: var(--text);
+  line-height: 1;
+}
+
+.pp-timer-controls {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+
+.pp-timer-btn {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.55rem 1.4rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border2);
+  background: var(--surface2);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 0.03em;
+}
+
+.pp-timer-btn.start { border-color: var(--green); color: var(--green); background: var(--bio-bg); }
+.pp-timer-btn.start:hover { background: rgba(74,222,128,0.15); }
+.pp-timer-btn.pause { border-color: var(--amber); color: var(--amber); background: var(--mat-bg); }
+.pp-timer-btn.pause:hover { background: rgba(251,146,60,0.15); }
+.pp-timer-btn.finish { border-color: var(--phy); color: var(--phy); background: var(--phy-bg); }
+.pp-timer-btn.finish:hover { background: rgba(96,165,250,0.15); }
+.pp-timer-btn.reset-t { border-color: var(--border2); color: var(--text-muted); }
+.pp-timer-btn.reset-t:hover { border-color: var(--red); color: var(--red); }
+
+.pp-timer-status {
+  text-align: center;
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 0.8rem;
+}
+
+.pp-score-entry {
+  display: none;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--border);
+  margin-top: 0.5rem;
+}
+
+.pp-score-entry.visible { display: block; }
+
+/* Edit time modal */
+.edit-time-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 300;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.edit-time-overlay.open { display: flex; }
+.edit-time-box {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 1.4rem;
+  max-width: 320px;
+  width: 100%;
+}
+.edit-time-box h3 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.2rem;
+  margin-bottom: 0.3rem;
+}
+.edit-time-box p { font-size: 0.68rem; color: var(--text-muted); margin-bottom: 1rem; }
+
+
+/* PRACTICE PAGE */
+.pq-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+
+.pq-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.7rem 1rem;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+}
+
+.pq-subject-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.pq-topic-label {
+  font-size: 0.75rem;
+  color: var(--text);
+  margin-top: 0.2rem;
+}
+
+.pq-marks-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.2rem 0.7rem;
+  border-radius: 99px;
+  background: var(--phy-bg);
+  border: 1px solid var(--phy-border);
+  color: var(--phy);
+}
+
+.pq-card-body {
+  padding: 1rem 1.2rem;
+}
+
+.pq-question-text {
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--text);
+  white-space: pre-wrap;
+}
+
+.pq-loading {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 0.5rem 0;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* Canvas */
+.pq-canvas-wrap {
+  background: #1a1a1a;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.pq-canvas-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.pq-tool-btn {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.3rem 0.8rem;
+  border-radius: 4px;
+  border: 1px solid var(--border2);
+  background: var(--surface3);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.pq-tool-btn:hover { color: var(--text); border-color: var(--text); }
+.pq-tool-btn.active { background: var(--phy-bg); border-color: var(--phy-border); color: var(--phy); }
+
+.pq-canvas {
+  display: block;
+  width: 100%;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+/* Saved question rows */
+.pq-saved-row {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 0.5rem;
+  overflow: hidden;
+}
+
+.pq-saved-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 1rem;
+  cursor: pointer;
+  gap: 0.5rem;
+}
+
+.pq-saved-header:hover { background: var(--surface2); }
+
+.pq-saved-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+.pq-saved-body {
+  display: none;
+  padding: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.pq-saved-body.open { display: block; }
+
+.pq-saved-canvas-preview {
+  width: 100%;
+  border-radius: 4px;
+  margin-top: 0.75rem;
+  border: 1px solid var(--border);
+}
+
+/* Toast */
+.toast {
+ position: fixed;
+ bottom: 2rem;
+ left: 50%;
+ transform: translateX(-50%) translateY(80px);
+ background: var(--surface2);
+ border: 1px solid var(--border2);
+ color: var(--text);
+ font-size: 0.72rem;
+ padding: 0.65rem 1.4rem;
+ border-radius: 99px;
+ z-index: 999;
+ transition: transform 0.3s;
+ white-space: nowrap;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+@media (max-width: 768px) {
+ .cal-grid { grid-template-columns: repeat(2, 1fr); }
+ .cal-day-header:nth-child(n+3) { display: none; }
+ .phase-bar { grid-template-columns: 1fr; }
+ .tl-summary { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 500px) {
+ .cal-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- App tabs -->
+<div class="app-tabs">
+ <button class="app-tab active" onclick="switchPage('timetable')"> Timetable</button>
+ <button class="app-tab" onclick="switchPage('tracker')" id="trackerTab">Tracker</button>
+ <button class="app-tab" onclick="switchPage('countdown')"> Countdown</button>
+ <button class="app-tab" onclick="switchPage('pastpapers')"> Past Papers</button>
+ <button class="app-tab" onclick="switchPage('resources')"> Resources</button>
+</div>
+
+<!-- TIMETABLE PAGE -->
+<div class="page active" id="page-timetable">
+<div class="tt-wrap">
+
+ <div class="tt-header">
+ <div class="tt-title">A Level<br><em>Revision</em><br>Planner</div>
+ <div class="tt-meta">
+ Start: 23 Mar 2026 &nbsp;·&nbsp; 13 weeks<br>
+ Physics P1: 20 May &nbsp;·&nbsp; Last exam: 18 Jun<br>
+ 3 × 1hr sessions/day<br>
+ Saturdays = rest days
+ </div>
+ </div>
+
+
+
+ <div class="week-nav" id="weekNav"></div>
+ <div id="weekPanels"></div>
+
+</div>
+</div>
+
+<!-- TRACKER PAGE -->
+<div class="page" id="page-tracker">
+<div class="tl-wrap">
+
+ <div class="tl-header">
+ <h2>Traffic Light<br><em>Tracker</em></h2>
+ </div>
+
+ <div class="tl-summary">
+ <div class="tl-stat red-s"><div class="num" id="tl-total-red">0</div><div class="lbl">Need work</div></div>
+ <div class="tl-stat amb-s"><div class="num" id="tl-total-amber">0</div><div class="lbl">Almost there</div></div>
+ <div class="tl-stat grn-s"><div class="num" id="tl-total-green">0</div><div class="lbl">Confident</div></div>
+ </div>
+
+ <div class="tl-subject-tabs">
+ <button class="tl-sub-btn active phy" onclick="switchTLSubject('physics')">Physics</button>
+ <button class="tl-sub-btn mat" onclick="switchTLSubject('maths')">Maths</button>
+ <button class="tl-sub-btn bio" onclick="switchTLSubject('biology')">Biology</button>
+ </div>
+
+ <div class="tl-search-wrap">
+   <input class="tl-search-input" type="text" id="tlSearchInput" placeholder="Search topics..." oninput="filterTLTopics(this.value)">
+ </div>
+ <div id="tl-panels"></div>
+
+</div>
+</div>
+
+<!-- COUNTDOWN PAGE -->
+<div class="page" id="page-countdown">
+<div class="today-wrap">
+ <div id="countdown-content"><!-- filled by JS --></div>
+</div>
+</div>
+
+<!-- PAST PAPERS PAGE -->
+<div class="page" id="page-pastpapers">
+<div class="today-wrap">
+ <div id="pp-content"><!-- filled by JS --></div>
+</div>
+</div>
+
+
+
+<!-- Finish score overlay -->
+<div class="edit-time-overlay" id="finishScoreOverlay">
+  <div class="edit-time-box">
+    <h3>Paper Complete</h3>
+    <p id="finishTimeDisplay" style="color:var(--text-muted);font-size:0.72rem;margin-bottom:0.75rem"></p>
+    <div class="score-field">
+      <label class="pp-form-label">Your score</label>
+      <input class="pp-input" type="text" id="finishScoreInput" placeholder="e.g. 45/60">
+    </div>
+    <button class="score-save-btn" style="margin-top:0.5rem" onclick="confirmFinish()">Save</button>
+    <button class="score-cancel-btn" onclick="cancelFinish()">Cancel</button>
+  </div>
+</div>
+
+<!-- Edit time modal -->
+<div class="edit-time-overlay" id="editTimeOverlay">
+  <div class="edit-time-box">
+    <h3>Edit Time</h3>
+    <p>Change the recorded time for this paper (in minutes).</p>
+    <div class="score-field">
+      <label class="pp-form-label">Time (mins)</label>
+      <input class="pp-input" type="number" id="editTimeInput" min="1" max="600" placeholder="">
+    </div>
+    <button class="score-save-btn" style="margin-top:0.5rem" onclick="saveEditTime()">Save</button>
+    <button class="score-cancel-btn" onclick="closeEditTime()">Cancel</button>
+  </div>
+</div>
+
+
+<!-- RESOURCES PAGE -->
+<div class="page" id="page-resources">
+<div class="today-wrap" style="max-width:1100px">
+ <div class="today-date-banner">
+ <h2>Revision <em>Resources</em></h2>
+ </div>
+ <div class="resources-grid">
+
+ <!-- PHYSICS -->
+ <div class="resources-col">
+ <div class="resources-col-header phy-header">
+ <span class="resources-col-dot" style="background:var(--phy)"></span>
+ Physics
+ </div>
+ <div class="resources-col-body">
+ <div class="resources-group-label">Reference</div>
+ <a class="res-btn phy-btn" href="https://pmt.physicsandmathstutor.com/download/Physics/A-level/Past-Papers/AQA/Data%20Sheet.pdf" target="_blank"> Physics Formula Sheet</a>
+
+ <div class="resources-group-label">Topic Practice</div>
+ <a class="res-btn phy-btn" href="https://www.physicsandmathstutor.com/physics-revision/a-level-aqa/" target="_blank"> Physics Topic Questions</a>
+
+ <div class="resources-group-label">Past Papers</div>
+ <a class="res-btn phy-btn" href="https://www.physicsandmathstutor.com/past-papers/a-level-physics/" target="_blank"> All Physics Past Papers</a>
+ <a class="res-btn phy-btn-outline" href="https://www.physicsandmathstutor.com/past-papers/a-level-physics/aqa-paper-1/" target="_blank">Paper 1</a>
+ <a class="res-btn phy-btn-outline" href="https://www.physicsandmathstutor.com/past-papers/a-level-physics/aqa-paper-2/" target="_blank">Paper 2</a>
+ <a class="res-btn phy-btn-outline" href="https://www.physicsandmathstutor.com/past-papers/a-level-physics/aqa-paper-3/" target="_blank">Paper 3</a>
+ </div>
+ </div>
+
+ <!-- MATHS -->
+ <div class="resources-col">
+ <div class="resources-col-header mat-header">
+ <span class="resources-col-dot" style="background:var(--mat)"></span>
+ Maths
+ </div>
+ <div class="resources-col-body">
+ <div class="resources-group-label">Reference</div>
+ <a class="res-btn mat-btn" href="https://www.mymathscloud.com/api/download/modules/A-Level/Syllabi-and-Formula-Booklets/AQA/AQA%20FORMULAE%20BOOKLET%20AS%20AND%20A%20LEVEL.pdf?id=18113870" target="_blank"> Maths Formula Sheet</a>
+
+ <div class="resources-group-label">Topic Practice</div>
+ <a class="res-btn mat-btn" href="https://www.physicsandmathstutor.com/maths-revision/a-level-aqa/" target="_blank"> Maths Topic Questions</a>
+
+ <div class="resources-group-label">Past Papers</div>
+ <a class="res-btn mat-btn" href="https://www.physicsandmathstutor.com/maths-revision/a-level-aqa/papers/" target="_blank"> All Maths Past Papers</a>
+ <a class="res-btn mat-btn-outline" href="https://www.physicsandmathstutor.com/maths-revision/a-level-aqa/papers/" target="_blank">Paper 1</a>
+ <a class="res-btn mat-btn-outline" href="https://www.physicsandmathstutor.com/maths-revision/a-level-aqa/papers/" target="_blank">Paper 2</a>
+ <a class="res-btn mat-btn-outline" href="https://www.physicsandmathstutor.com/maths-revision/a-level-aqa/papers/" target="_blank">Paper 3</a>
+ </div>
+ </div>
+
+ <!-- BIOLOGY -->
+ <div class="resources-col">
+ <div class="resources-col-header bio-header">
+ <span class="resources-col-dot" style="background:var(--bio)"></span>
+ Biology
+ </div>
+ <div class="resources-col-body">
+ <div class="resources-group-label">Topic Practice</div>
+ <a class="res-btn bio-btn" href="https://www.physicsandmathstutor.com/biology-revision/a-level-ocr-a/" target="_blank"> Biology Topic Questions</a>
+
+ <div class="resources-group-label">Past Papers</div>
+ <a class="res-btn bio-btn" href="https://www.physicsandmathstutor.com/past-papers/a-level-biology/" target="_blank"> All Biology Past Papers</a>
+ <a class="res-btn bio-btn-outline" href="https://www.physicsandmathstutor.com/past-papers/a-level-biology/ocr-a-paper-1/" target="_blank">Paper 1</a>
+ <a class="res-btn bio-btn-outline" href="https://www.physicsandmathstutor.com/past-papers/a-level-biology/ocr-a-paper-2/" target="_blank">Paper 2</a>
+ <a class="res-btn bio-btn-outline" href="https://www.physicsandmathstutor.com/past-papers/a-level-biology/ocr-a-paper-3/" target="_blank">Paper 3</a>
+ </div>
+ </div>
+
+ </div>
+</div>
+</div>
+
+<!-- DAY DETAIL OVERLAY -->
+<div class="day-overlay" id="dayOverlay">
+ <div class="day-overlay-box">
+ <div class="day-overlay-header">
+ <div>
+ <div class="day-overlay-label" id="dayOverlayLabel"></div>
+ <div class="day-overlay-title" id="dayOverlayTitle"></div>
+ </div>
+ <button class="day-overlay-close" onclick="closeDayOverlay()">X</button>
+ </div>
+ <div class="day-overlay-body" id="dayOverlayBody"></div>
+ </div>
+</div>
+
+
+<!-- PRACTICE PAGE -->
+<div class="page" id="page-practice">
+<div class="today-wrap" style="max-width:800px">
+  <div class="today-date-banner">
+    <h2>Practice <em>Questions</em></h2>
+  </div>
+
+  <!-- Generator panel -->
+  <div class="pp-terminal" style="margin-bottom:1.5rem">
+    <div class="pp-terminal-header">Generate a Question</div>
+    <div class="pp-terminal-body">
+      <div class="pp-form-row">
+        <div class="pp-form-field">
+          <label class="pp-form-label">Subject</label>
+          <select class="pp-select" id="pq-subj" onchange="updatePQTopics()">
+            <option value="physics">Physics (AQA)</option>
+            <option value="maths">Maths (AQA)</option>
+            <option value="biology">Biology (OCR)</option>
+          </select>
+        </div>
+        <div class="pp-form-field">
+          <label class="pp-form-label">Topic</label>
+          <select class="pp-select" id="pq-topic"></select>
+        </div>
+        <div class="pp-form-field">
+          <label class="pp-form-label">Marks</label>
+          <select class="pp-select" id="pq-marks">
+            <option value="1">1 mark</option>
+            <option value="2">2 marks</option>
+            <option value="3">3 marks</option>
+            <option value="4">4 marks</option>
+            <option value="5">5 marks</option>
+            <option value="6">6 marks</option>
+          </select>
+        </div>
+      </div>
+      <div class="pp-form-actions">
+        <button class="pp-timer-btn start" onclick="generateQuestion()">Generate Question</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Question display area -->
+  <div id="pq-question-area" style="display:none">
+
+    <!-- Question card -->
+    <div class="pq-card" id="pq-question-card">
+      <div class="pq-card-header">
+        <div>
+          <div id="pq-card-subject" class="pq-subject-label"></div>
+          <div id="pq-card-topic" class="pq-topic-label"></div>
+        </div>
+        <div id="pq-card-marks" class="pq-marks-badge"></div>
+      </div>
+      <div class="pq-card-body">
+        <div id="pq-question-text" class="pq-question-text"></div>
+        <div id="pq-loading" class="pq-loading" style="display:none">Generating question...</div>
+      </div>
+    </div>
+
+    <!-- Canvas area -->
+    <div class="pq-canvas-wrap">
+      <div class="pq-canvas-toolbar">
+        <div style="display:flex;gap:0.5rem;align-items:center">
+          <button class="pq-tool-btn active" id="btn-pen" onclick="setTool('pen')">Pen</button>
+          <button class="pq-tool-btn" id="btn-eraser" onclick="setTool('eraser')">Eraser</button>
+          <input type="range" id="pq-stroke-size" min="1" max="20" value="2" style="width:80px;accent-color:var(--phy)">
+        </div>
+        <div style="display:flex;gap:0.5rem">
+          <button class="pq-tool-btn" onclick="clearCanvas()">Clear</button>
+          <button class="pq-tool-btn" onclick="undoCanvas()">Undo</button>
+        </div>
+      </div>
+      <canvas id="pq-canvas" class="pq-canvas"></canvas>
+    </div>
+
+    <!-- Mark scheme + actions -->
+    <div style="display:flex;gap:0.75rem;margin-top:1rem;flex-wrap:wrap">
+      <button class="pp-timer-btn finish" onclick="toggleMarkScheme()">Show Mark Scheme</button>
+      <button class="pp-timer-btn start" onclick="saveQuestion()">Save Question</button>
+      <button class="pp-action-btn reset-btn" onclick="discardQuestion()">Discard</button>
+    </div>
+
+    <div id="pq-markscheme-area" style="display:none;margin-top:1rem">
+      <div class="pq-card" style="border-color:var(--green)">
+        <div class="pq-card-header" style="background:rgba(74,222,128,0.08)">
+          <div class="pq-subject-label" style="color:var(--green)">Mark Scheme</div>
+        </div>
+        <div class="pq-card-body">
+          <div id="pq-markscheme-text" class="pq-question-text"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Saved questions -->
+  <div id="pq-saved-section" style="margin-top:2rem">
+    <div class="countdown-section-label">Saved Questions</div>
+    <div id="pq-saved-list"></div>
+  </div>
+
+</div>
+</div>
+
+<!-- Rating prompt modal -->
+<div class="modal-overlay" id="ratingModal">
+ <div class="modal-box">
+ <h3>How did it go?</h3>
+ <div class="modal-topic" id="modalTopicText"></div>
+ <div class="modal-rating-btns">
+ <button class="modal-rating-btn red-btn" onclick="submitModalRating('red')">
+ <div class="dot" style="background:var(--red)"></div>Still struggling
+ </button>
+ <button class="modal-rating-btn amb-btn" onclick="submitModalRating('amber')">
+ <div class="dot" style="background:var(--amber)"></div>Getting there
+ </button>
+ <button class="modal-rating-btn grn-btn" onclick="submitModalRating('green')">
+ <div class="dot" style="background:var(--green)"></div>Confident now
+ </button>
+ </div>
+ <button class="modal-skip" onclick="closeModal()">Skip — keep rating unchanged</button>
+ </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// TOPIC DATA 
+const SUBJECTS = {
+ physics: {
+ label: 'Physics', cls: 'phy',
+ sections: [
+ { name: 'Measurements & Errors', topics: ['SI units & prefixes','Random & systematic errors','Accuracy & precision','Uncertainty (absolute, fractional, %)','Combining uncertainties','Graphs & gradients'] },
+ { name: 'Particles & Radiation', topics: ['Atomic structure','Stable & unstable nuclei','Particles & antiparticles','Particle interactions (photons, leptons, quarks)','Conservation laws (charge, baryon, lepton)','Quarks & hadrons','Strange particles','Feynman diagrams','Photoelectric effect','Energy levels & photon emission','Wave-particle duality'] },
+ { name: 'Waves', topics: ['Progressive waves (amplitude, frequency, wavelength)','Transverse & longitudinal waves','Superposition','Stationary waves','Diffraction','Two-source interference',"Young's double slit",'Diffraction grating',"Refraction & Snell's law",'Total internal reflection','Polarisation'] },
+ { name: 'Mechanics & Materials', topics: ['Scalars & vectors','Moments','Motion along a line (SUVAT)','Projectile motion',"Newton's laws",'Momentum & impulse','Work, energy & power','Conservation of energy','Bulk properties of solids (stress, strain, Young\'s modulus)','Force-extension graphs & Hooke\'s law'] },
+ { name: 'Electricity', topics: ['Charge, current & potential difference','Resistance & Ohm\'s law','I-V characteristics','Resistivity','Power & energy','Series & parallel circuits','EMF & internal resistance','Potential dividers',"Kirchhoff's laws"] },
+ { name: 'Further Mechanics', topics: ['Circular motion (angular velocity, centripetal acceleration)','Simple harmonic motion (SHM) — defining equation','SHM energy','Forced oscillations & resonance','Damping'] },
+ { name: 'Thermal Physics', topics: ['Thermal energy transfer','Internal energy','Ideal gas law (pV=nRT)','Kinetic theory of gases','Boltzmann constant','Specific heat capacity','Specific latent heat'] },
+ { name: 'Fields', topics: ['Gravitational fields (uniform & radial)','Gravitational potential',"Orbits & Kepler's law",'Electric fields (uniform & radial)','Electric potential','Capacitors (charge, energy, time constant)','Capacitor charging & discharging','Magnetic fields (force on wire & charge)',"Electromagnetic induction & Faraday's law","Lenz's law",'Transformers','Alternating current (RMS, peak)'] },
+ { name: 'Nuclear Physics', topics: ['Radioactive decay (alpha, beta, gamma)','Activity & half-life','Radioactive decay equations','Nuclear radius','Nuclear binding energy','Fission & fusion','Background radiation'] },
+ { name: 'Astrophysics', topics: ['Telescopes (refracting, reflecting, radio)','Imaging & detecting radiation','Distances in space (parsec, light year, AU)','Stellar luminosity & flux','Hertzsprung-Russell diagram','Stellar evolution (main sequence, giants, white dwarfs, neutron stars)','Supernovae & black holes','Doppler effect & redshift',"Hubble's law & the expanding universe",'Cosmic microwave background radiation','Dark matter & dark energy'] },
+ ]
+ },
+ maths: {
+ label: 'Maths', cls: 'mat',
+ sections: [
+ { name: 'Pure — Algebra & Functions', topics: ['Algebraic expressions & manipulation','Quadratics','Equations & inequalities','Graphs & transformations','Straight-line graphs','Circles','Algebraic methods (proof, factor theorem)','Partial fractions','Functions & mappings','Composite & inverse functions','Modulus function'] },
+ { name: 'Pure — Coordinate Geometry', topics: ['Straight-line graphs','Circles (equations, chords, tangents)'] },
+ { name: 'Pure — Sequences & Series', topics: ['Arithmetic sequences & series','Geometric sequences & series','Sigma notation','Binomial expansion (positive integer)','Binomial expansion (any rational n)'] },
+ { name: 'Pure — Trigonometry', topics: ['Trigonometric ratios & graphs','Trig identities (sin²+cos²=1 etc.)','Solving trig equations','Radians, arc length, sector area','Small angle approximations','Reciprocal trig functions','Inverse trig functions','Addition formulae','Double angle formulae','R cos/sin(θ ± α) form'] },
+ { name: 'Pure — Exponentials & Logarithms', topics: ['Exponential functions & graphs','Logarithms & laws','Natural log (ln) & e','Solving exponential equations','Modelling with exponentials'] },
+ { name: 'Pure — Differentiation', topics: ['Differentiation from first principles','Differentiating polynomials','Chain rule','Product rule','Quotient rule','Differentiating trig functions','Differentiating exponentials & logs','Implicit differentiation','Parametric differentiation','Second derivatives & stationary points','Rates of change'] },
+ { name: 'Pure — Integration', topics: ['Indefinite integration','Definite integration','Area under a curve','Trapezium rule','Integration by substitution','Integration by parts','Integrating trig & exponentials','Integrating partial fractions','Differential equations (separable)'] },
+ { name: 'Pure — Vectors', topics: ['2D vectors','3D vectors','Magnitude & direction','Position vectors','Scalar (dot) product'] },
+ { name: 'Pure — Numerical Methods', topics: ['Locating roots (sign change)','Newton-Raphson method','Fixed-point iteration','Iteration convergence'] },
+ { name: 'Pure — Proof', topics: ['Proof by deduction','Proof by exhaustion','Disproof by counter-example','Proof by contradiction'] },
+ { name: 'Statistics', topics: ['Statistical sampling','Data representation (histograms, box plots, cumulative frequency)','Measures of location & spread','Coding data','Correlation & regression','Probability basics','Conditional probability','Discrete probability distributions','Binomial distribution','Normal distribution','Hypothesis testing (binomial)','Hypothesis testing (normal)'] },
+ { name: 'Mechanics', topics: ['Kinematics (constant acceleration, SUVAT)','Kinematics (variable acceleration, calculus)',"Forces & Newton's laws",'Connected particles','Moments','Vectors in mechanics','Projectile motion'] },
+ ]
+ },
+ biology: {
+ label: 'Biology', cls: 'bio',
+ sections: [
+ { name: 'Module 2 — Foundations in Biology', topics: ['Cell structure (prokaryotic & eukaryotic)','Microscopy & magnification','Cell fractionation & ultracentrifugation','Biological molecules — carbohydrates','Biological molecules — lipids','Biological molecules — proteins & amino acids','Enzyme action (lock & key, induced fit)','Enzyme inhibition (competitive & non-competitive)','Factors affecting enzyme activity','Water & its properties','DNA & RNA structure','ATP structure & hydrolysis','Cell membranes (fluid mosaic model)','Membrane transport (diffusion, osmosis, active transport)','Mitosis & cell cycle','Meiosis'] },
+ { name: 'Module 3 — Exchange & Transport', topics: ['Surface area to volume ratio','Gas exchange (insects, fish, mammals)','Alveoli structure & function','Ventilation in mammals','Haemoglobin & oxygen dissociation curve','Bohr effect','Blood vessels (arteries, veins, capillaries)','Heart structure & cardiac cycle','Pressure changes in the heart','Xylem structure & transpiration','Factors affecting transpiration','Translocation & phloem'] },
+ { name: 'Module 4 — Biodiversity, Evolution & Disease', topics: ['Pathogens & disease (bacteria, viruses, fungi)','Non-specific immune response','Specific immune response (B & T lymphocytes)','Antibodies & antigens','Vaccination','HIV & immune system','Biodiversity (species richness, Simpson\'s index)','Sampling techniques','Classification & taxonomy',"Darwin's natural selection",'Speciation (allopatric & sympatric)','Genetic drift'] },
+ { name: 'Module 5 — Communication, Homeostasis & Energy', topics: ['Homeostasis principles','Thermoregulation','Blood glucose regulation (insulin & glucagon)','Diabetes (Type 1 & 2)','Kidney structure & ultrafiltration','Selective reabsorption','Osmoregulation & ADH','Resting potential','Action potential & propagation','Synaptic transmission','Neuromuscular junction','Muscle structure (sarcomere, sliding filament)','Photosynthesis — light dependent reactions','Photosynthesis — Calvin cycle','Limiting factors in photosynthesis','Respiration — glycolysis','Krebs cycle','Oxidative phosphorylation','Anaerobic respiration'] },
+ { name: 'Module 6 — Genetics, Evolution & Ecosystems', topics: ['DNA replication','Transcription & translation','Gene mutations','Genetic code (codons, degeneracy)','Epigenetics','Monohybrid inheritance','Dihybrid inheritance','Codominance & multiple alleles','Sex linkage','Hardy-Weinberg principle','Ecosystems — trophic levels & food webs','Energy flow & efficiency','Nitrogen cycle','Carbon cycle','Succession','Conservation methods','DNA technology (PCR, gel electrophoresis)','Genetic engineering & recombinant DNA','GMOs','Stem cells','Cloning'] },
+ ]
+ }
+};
+
+// Initial ratings from user's input
+const INITIAL_RATINGS = {
+ physics: {
+ 'SI units & prefixes':'green','Random & systematic errors':'amber','Accuracy & precision':'amber','Uncertainty (absolute, fractional, %)':'red','Combining uncertainties':'red','Graphs & gradients':'green',
+ 'Atomic structure':'green','Stable & unstable nuclei':'amber','Particles & antiparticles':'red','Particle interactions (photons, leptons, quarks)':'red','Conservation laws (charge, baryon, lepton)':'red','Quarks & hadrons':'red','Strange particles':'red','Feynman diagrams':'red','Photoelectric effect':'red','Energy levels & photon emission':'amber','Wave-particle duality':'red',
+ 'Progressive waves (amplitude, frequency, wavelength)':'green','Transverse & longitudinal waves':'green','Superposition':'amber','Stationary waves':'green','Diffraction':'red','Two-source interference':'red',"Young's double slit":'red','Diffraction grating':'red',"Refraction & Snell's law":'red','Total internal reflection':'red','Polarisation':'amber',
+ 'Scalars & vectors':'green','Moments':'amber','Motion along a line (SUVAT)':'green','Projectile motion':'amber',"Newton's laws":'amber','Momentum & impulse':'amber','Work, energy & power':'amber','Conservation of energy':'amber','Bulk properties of solids (stress, strain, Young\'s modulus)':'red','Force-extension graphs & Hooke\'s law':'red',
+ 'Charge, current & potential difference':'amber','Resistance & Ohm\'s law':'red','I-V characteristics':'red','Resistivity':'red','Power & energy':'red','Series & parallel circuits':'red','EMF & internal resistance':'red','Potential dividers':'red',"Kirchhoff's laws":'red',
+ 'Circular motion (angular velocity, centripetal acceleration)':'amber','Simple harmonic motion (SHM) — defining equation':'amber','SHM energy':'red','Forced oscillations & resonance':'red','Damping':'red',
+ 'Thermal energy transfer':'red','Internal energy':'red','Ideal gas law (pV=nRT)':'red','Kinetic theory of gases':'red','Boltzmann constant':'red','Specific heat capacity':'red','Specific latent heat':'red',
+ 'Gravitational fields (uniform & radial)':'amber','Gravitational potential':'amber',"Orbits & Kepler's law":'red','Electric fields (uniform & radial)':'amber','Electric potential':'red','Capacitors (charge, energy, time constant)':'red','Capacitor charging & discharging':'red','Magnetic fields (force on wire & charge)':'amber',"Electromagnetic induction & Faraday's law":'red',"Lenz's law":'red','Transformers':'red','Alternating current (RMS, peak)':'red',
+ 'Radioactive decay (alpha, beta, gamma)':'amber','Activity & half-life':'amber','Radioactive decay equations':'red','Nuclear radius':'red','Nuclear binding energy':'red','Fission & fusion':'red','Background radiation':'red',
+ 'Telescopes (refracting, reflecting, radio)':'red','Imaging & detecting radiation':'red','Distances in space (parsec, light year, AU)':'amber','Stellar luminosity & flux':'red','Hertzsprung-Russell diagram':'red','Stellar evolution (main sequence, giants, white dwarfs, neutron stars)':'red','Supernovae & black holes':'red','Doppler effect & redshift':'amber',"Hubble's law & the expanding universe":'red','Cosmic microwave background radiation':'red','Dark matter & dark energy':'red',
+ },
+ maths: {
+ 'Algebraic expressions & manipulation':'green','Quadratics':'green','Equations & inequalities':'amber','Graphs & transformations':'amber','Straight-line graphs':'amber','Circles':'amber','Algebraic methods (proof, factor theorem)':'amber','Partial fractions':'red','Functions & mappings':'amber','Composite & inverse functions':'red','Modulus function':'red',
+ 'Circles (equations, chords, tangents)':'red',
+ 'Arithmetic sequences & series':'amber','Geometric sequences & series':'amber','Sigma notation':'red','Binomial expansion (positive integer)':'amber','Binomial expansion (any rational n)':'red',
+ 'Trigonometric ratios & graphs':'amber','Trig identities (sin²+cos²=1 etc.)':'amber','Solving trig equations':'amber','Radians, arc length, sector area':'red','Small angle approximations':'green','Reciprocal trig functions':'amber','Inverse trig functions':'red','Addition formulae':'red','Double angle formulae':'amber','R cos/sin(θ ± α) form':'red',
+ 'Exponential functions & graphs':'amber','Logarithms & laws':'amber','Natural log (ln) & e':'amber','Solving exponential equations':'red','Modelling with exponentials':'red',
+ 'Differentiation from first principles':'red','Differentiating polynomials':'amber','Chain rule':'red','Product rule':'amber','Quotient rule':'amber','Differentiating trig functions':'amber','Differentiating exponentials & logs':'amber','Implicit differentiation':'red','Parametric differentiation':'red','Second derivatives & stationary points':'amber','Rates of change':'amber',
+ 'Indefinite integration':'green','Definite integration':'green','Area under a curve':'green','Trapezium rule':'red','Integration by substitution':'red','Integration by parts':'red','Integrating trig & exponentials':'amber','Integrating partial fractions':'red','Differential equations (separable)':'red',
+ '2D vectors':'green','3D vectors':'amber','Magnitude & direction':'amber','Position vectors':'amber','Scalar (dot) product':'amber',
+ 'Locating roots (sign change)':'amber','Newton-Raphson method':'red','Fixed-point iteration':'amber','Iteration convergence':'red',
+ 'Proof by deduction':'amber','Proof by exhaustion':'amber','Disproof by counter-example':'amber','Proof by contradiction':'red',
+ 'Statistical sampling':'amber','Data representation (histograms, box plots, cumulative frequency)':'amber','Measures of location & spread':'red','Coding data':'red','Correlation & regression':'red','Probability basics':'green','Conditional probability':'green','Discrete probability distributions':'red','Binomial distribution':'red','Normal distribution':'red','Hypothesis testing (binomial)':'red','Hypothesis testing (normal)':'red',
+ 'Kinematics (constant acceleration, SUVAT)':'green','Kinematics (variable acceleration, calculus)':'green',"Forces & Newton's laws":'amber','Connected particles':'amber','Moments':'red','Vectors in mechanics':'amber','Projectile motion':'amber',
+ },
+ biology: {
+ 'Cell structure (prokaryotic & eukaryotic)':'green','Microscopy & magnification':'amber','Cell fractionation & ultracentrifugation':'amber','Biological molecules — carbohydrates':'red','Biological molecules — lipids':'red','Biological molecules — proteins & amino acids':'red','Enzyme action (lock & key, induced fit)':'amber','Enzyme inhibition (competitive & non-competitive)':'amber','Factors affecting enzyme activity':'amber','Water & its properties':'amber','DNA & RNA structure':'red','ATP structure & hydrolysis':'red','Cell membranes (fluid mosaic model)':'red','Membrane transport (diffusion, osmosis, active transport)':'red','Mitosis & cell cycle':'red','Meiosis':'red',
+ 'Surface area to volume ratio':'green','Gas exchange (insects, fish, mammals)':'amber','Alveoli structure & function':'red','Ventilation in mammals':'amber','Haemoglobin & oxygen dissociation curve':'red','Bohr effect':'red','Blood vessels (arteries, veins, capillaries)':'amber','Heart structure & cardiac cycle':'red','Pressure changes in the heart':'red','Xylem structure & transpiration':'red','Factors affecting transpiration':'amber','Translocation & phloem':'red',
+ 'Pathogens & disease (bacteria, viruses, fungi)':'amber','Non-specific immune response':'red','Specific immune response (B & T lymphocytes)':'red','Antibodies & antigens':'red','Vaccination':'amber','HIV & immune system':'red','Biodiversity (species richness, Simpson\'s index)':'red','Sampling techniques':'amber','Classification & taxonomy':'red',"Darwin's natural selection":'amber','Speciation (allopatric & sympatric)':'red','Genetic drift':'red',
+ 'Homeostasis principles':'amber','Thermoregulation':'amber','Blood glucose regulation (insulin & glucagon)':'red','Diabetes (Type 1 & 2)':'amber','Kidney structure & ultrafiltration':'red','Selective reabsorption':'red','Osmoregulation & ADH':'red','Resting potential':'amber','Action potential & propagation':'amber','Synaptic transmission':'amber','Neuromuscular junction':'red','Muscle structure (sarcomere, sliding filament)':'red','Photosynthesis — light dependent reactions':'red','Photosynthesis — Calvin cycle':'red','Limiting factors in photosynthesis':'red','Respiration — glycolysis':'red','Krebs cycle':'red','Oxidative phosphorylation':'red','Anaerobic respiration':'red',
+ 'DNA replication':'red','Transcription & translation':'red','Gene mutations':'red','Genetic code (codons, degeneracy)':'red','Epigenetics':'red','Monohybrid inheritance':'red','Dihybrid inheritance':'red','Codominance & multiple alleles':'red','Sex linkage':'red','Hardy-Weinberg principle':'red','Ecosystems — trophic levels & food webs':'red','Energy flow & efficiency':'red','Nitrogen cycle':'red','Carbon cycle':'red','Succession':'red','Conservation methods':'amber','DNA technology (PCR, gel electrophoresis)':'red','Genetic engineering & recombinant DNA':'red','GMOs':'red','Stem cells':'red','Cloning':'amber',
+ }
+};
+
+// Load from localStorage or use initial
+function loadRatings() {
+ try {
+ const saved = localStorage.getItem('alevel_ratings');
+ if (saved) return JSON.parse(saved);
+ } catch(e) {}
+ return JSON.parse(JSON.stringify(INITIAL_RATINGS));
+}
+
+function saveRatings() {
+ try { localStorage.setItem('alevel_ratings', JSON.stringify(ratings)); } catch(e) {}
+}
+
+let ratings = loadRatings();
+
+// TIMETABLE DATA 
+const EXAMS = [
+ { date:'2026-05-20', label:'Physics P1', subj:'physics' },
+ { date:'2026-06-01', label:'Physics P2', subj:'physics' },
+ { date:'2026-06-03', label:'Maths P1', subj:'maths' },
+ { date:'2026-06-04', label:'Bio P1', subj:'biology' },
+ { date:'2026-06-08', label:'Physics P3', subj:'physics' },
+ { date:'2026-06-11', label:'Maths P2', subj:'maths' },
+ { date:'2026-06-12', label:'Bio P2', subj:'biology' },
+ { date:'2026-06-16', label:'Bio P3', subj:'biology' },
+ { date:'2026-06-18', label:'Maths P3', subj:'maths' },
+];
+
+// School lessons by day-of-week (1=Mon ... 5=Fri)
+const SCHOOL_LESSONS = {
+ 1: [{ time:'09:00', end:'10:00', label:'Maths', cls:'mat' },{ time:'10:00', end:'11:00', label:'Maths Support', cls:'mat' },{ time:'14:00', end:'15:00', label:'Physics', cls:'phy' }],
+ 2: [{ time:'14:00', end:'15:00', label:'Biology', cls:'bio' },{ time:'15:00', end:'16:00', label:'Maths', cls:'mat' }],
+ 3: [{ time:'09:00', end:'11:00', label:'Biology', cls:'bio' },{ time:'14:00', end:'16:00', label:'Physics', cls:'phy' }],
+ 4: [{ time:'10:00', end:'12:00', label:'Maths', cls:'mat' },{ time:'13:00', end:'14:00', label:'Physics', cls:'phy' }],
+ 5: [{ time:'09:00', end:'10:00', label:'Future Ready', cls:'other' },{ time:'10:00', end:'12:00', label:'Biology', cls:'bio' },{ time:'13:00', end:'14:00', label:'Biology Booster', cls:'bio' }],
+};
+
+// Free periods available for revision per day (slots that fit within free periods)
+// Returns array of {time, location}
+function getFreePeriods(dow) {
+ // Tue: free periods 09:00–14:00 (3 slots, shifted 1hr later than before)
+ if (dow === 2) return [{time:'10:00',loc:'Free (school)'},{time:'11:00',loc:'Free (school)'},{time:'12:00',loc:'Free (school)'}];
+ // Wed: 2 free period slots + 1 early afternoon
+ if (dow === 3) return [{time:'11:00',loc:'Free (school)'},{time:'12:00',loc:'Free (school)'}];
+ // Thu: free period at 09:00 moved to 15:30 (after lessons end)
+ // (handled via evening times override below)
+ return [];
+}
+
+// Topic pools per subject — cycle through red first, then amber, then green
+let topicQueues = {};
+function buildQueues() {
+ topicQueues = {};
+ for (const [subj, data] of Object.entries(SUBJECTS)) {
+ const reds = [], ambers = [], greens = [];
+ for (const sec of data.sections) {
+ for (const topic of sec.topics) {
+ const r = ratings[subj]?.[topic] || 'red';
+ if (r === 'red') reds.push(topic);
+ else if (r === 'amber') ambers.push(topic);
+ else greens.push(topic);
+ }
+ }
+ topicQueues[subj] = { red: reds, amber: ambers, green: greens, ri:0, ai:0, gi:0 };
+ }
+}
+
+function pickTopic(subj, phase, forceGreen) {
+ const q = topicQueues[subj];
+
+ if (forceGreen) {
+ if (q.green.length) { const t = q.green[q.gi % q.green.length]; q.gi++; return {topic:t,rating:'green'}; }
+ }
+
+ // Check missed topics first — they get top priority over everything
+ const missed = getMissedForSubject(subj);
+ for (const missedTopic of missed) {
+ // Find which pool it's in based on current rating
+ for (const pool of ['red','amber','green']) {
+ if (q[pool].includes(missedTopic)) {
+ return { topic: missedTopic, rating: pool, missed: true };
+ }
+ }
+ }
+
+ // Phase weights
+ let redW, ambW, grnW;
+ if (phase <= 4) { redW=65; ambW=30; grnW=5; }
+ else if (phase <= 9) { redW=55; ambW=35; grnW=10; }
+ else { redW=40; ambW=40; grnW=20; }
+
+ const roll = seededRand() * 100;
+ let pick;
+ if (roll < redW && q.red.length) { pick = 'red'; }
+ else if (roll < redW+ambW && q.amber.length) { pick = 'amber'; }
+ else if (q.green.length) { pick = 'green'; }
+ else if (q.red.length) { pick = 'red'; }
+ else if (q.amber.length) { pick = 'amber'; }
+ else return { topic: 'Past paper practice', rating: 'green' };
+
+ const arr = q[pick];
+ const key = pick === 'red' ? 'ri' : pick === 'amber' ? 'ai' : 'gi';
+ const t = arr[q[key] % arr.length];
+ q[key]++;
+ return { topic: t, rating: pick };
+}
+
+// Seeded random
+let seed = 12345;
+function seededRand() {
+ seed = (seed * 9301 + 49297) % 233280;
+ return seed / 233280;
+}
+
+function dateStr(d) { const y=d.getFullYear(); const m=String(d.getMonth()+1).padStart(2,'0'); const dy=String(d.getDate()).padStart(2,'0'); return y+'-'+m+'-'+dy; }
+function addDays(d, n) { const r = new Date(d); r.setDate(r.getDate()+n); return r; }
+function fmt(d) { return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'}); }
+function fmtFull(d) { return d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}); }
+
+// Week subject weights [physics, maths, bio]
+const WEEK_WEIGHTS = [
+ [1.5,0.8,0.7],[1.5,0.8,0.7],[1.4,0.9,0.7],[1.4,0.8,0.8], // 1-4 physics heavy
+ [1.1,1.0,0.9],[0.9,1.0,1.1],[0.8,1.1,1.1],[0.8,1.0,1.2],[0.7,1.1,1.2], // 5-9 bio+maths
+ [1.0,1.1,0.9],[1.0,1.1,0.9],[1.0,1.0,1.0],[1.0,1.0,1.0], // 10-13 balanced
+];
+
+const WEEK_FOCUSES = [
+ "Physics: Electricity + Thermal Physics. Maths: Integration techniques. Biology: Cell biology & molecules.",
+ "Physics: Particles & Radiation. Maths: Advanced differentiation. Biology: DNA, membranes, cell division.",
+ "Physics: Waves. Maths: Trigonometry. Biology: Exchange & transport.",
+ "Physics: Fields. Maths: Statistics & hypothesis testing. Biology: Immune system, biodiversity.",
+ "Physics: Nuclear + Astrophysics. Maths: Logs & exponentials. Biology: Homeostasis, kidneys, nervous system.",
+ "Physics: SHM & Further Mechanics. Maths: Mechanics & proof. Biology: Photosynthesis & respiration.",
+ "Physics: Weak spots + past papers. Maths: Statistics consolidation. Biology: Genetics.",
+ "Physics: Fields revision. Maths: Coordinate geometry & vectors. Biology: DNA technology.",
+ "Physics: Astrophysics & Nuclear. Maths: Full pure consolidation. Biology: Module 6.",
+ "Exam season. Light review sessions. Physics: P1 prep. Biology: M2+M3 revision.",
+ "Physics P2 + Bio P1 week. Maths P1 prep. Exam technique focus.",
+ "Maths P2 + Bio P2 week. Physics P3 final polish.",
+ "Final week - Bio P3 (16 Jun) + Maths P3 (18 Jun). You have got this.",
+];
+
+const SUBJ_ORDER = ['physics','maths','biology'];
+
+// Past paper slot tracker — reset each week, tracks how many PP slots assigned per subject
+let ppCountThisWeek = { physics:0, maths:0, biology:0 };
+const PP_PER_SUBJECT_PER_WEEK = 2; // from week 5 onwards
+
+function buildDaySlots(date, weekIdx) {
+ const dow = date.getDay();
+ const ds = dateStr(date);
+ const examsToday = EXAMS.filter(e => e.date === ds);
+ const phase = weekIdx + 1;
+
+ // Saturday = rest
+ if (dow === 6) return { type: 'rest' };
+
+ // After last exam (18 Jun) — finished!
+ if (ds > '2026-06-18') return { type: 'rest' };
+
+ // Exam day = 1 green slot only
+ if (examsToday.length) {
+ const examSubj = examsToday[0].subj === 'biology' ? 'biology' : examsToday[0].subj;
+ const { topic, rating } = pickTopic(examSubj, phase, true);
+ return {
+ type: 'exam',
+ exams: examsToday,
+ slots: [{ subject: examSubj, topic, rating, time: '08:00', loc: 'Before exam — light review' }]
+ };
+ }
+
+ const [pw,mw,bw] = WEEK_WEIGHTS[Math.min(weekIdx, WEEK_WEIGHTS.length-1)];
+ const total = pw+mw+bw;
+ const norm = { physics: pw/total*3, maths: mw/total*3, biology: bw/total*3 };
+
+ let slotTimes = [];
+ let slotLocs = [];
+ let slotCount = 3;
+
+ // From 8 May: study leave — 4 slots per day, no set times, saturdays still rest
+ if (ds >= '2026-05-08') {
+   slotCount = 4;
+   slotTimes = ['','','',''];
+   slotLocs = ['Study leave','Study leave','Study leave','Study leave'];
+ } else if (dow === 0) {
+   slotCount = 4;
+   slotTimes = ['10:00','11:30','14:00','15:30'];
+   slotLocs = ['Home','Home','Home','Home'];
+ } else if (dow === 1) {
+   slotTimes = ['12:30','13:30','17:00'];
+   slotLocs = ['Home (lunch)','Home (lunch)','Evening (home)'];
+ } else if (dow === 2) {
+   slotTimes = ['10:00','11:00','12:00'];
+   slotLocs = ['Free (school)','Free (school)','Free (school)'];
+ } else if (dow === 3) {
+   slotTimes = ['11:00','12:00','13:00'];
+   slotLocs = ['Free (school)','Free (school)','Free (school)'];
+ } else if (dow === 4) {
+   slotTimes = ['15:30','17:00','18:00'];
+   slotLocs = ['After school','Evening (home)','Evening (home)'];
+ } else if (dow === 5) {
+   slotCount = 1;
+   slotTimes = ['15:00'];
+   slotLocs = ['After school'];
+ }
+
+ // Rebuild order to match slotCount
+ const acc2 = { physics:0, maths:0, biology:0 };
+ const finalOrder = [];
+ for (let i = 0; i < slotCount; i++) {
+ let best = null, bestVal = -99;
+ for (const s of SUBJ_ORDER) {
+ const rem = norm[s] - acc2[s];
+ if (rem > bestVal) { bestVal = rem; best = s; }
+ }
+ finalOrder.push(best);
+ acc2[best]++;
+ }
+
+ const slots = finalOrder.map((subj, i) => {
+ // From week 5 onwards: if this subject hasn't had its 2 past paper slots yet this week,
+ // and a seeded coin-flip says yes, make this a past paper slot
+ let isPastPaper = false;
+ if (phase >= 5 && ppCountThisWeek[subj] < PP_PER_SUBJECT_PER_WEEK) {
+ // Deterministically decide based on seed — roughly spread across the week
+ const roll = seededRand();
+ // Each subject needs 2 PP slots out of ~3-4 slots/week for that subject
+ // Probability scales up as week progresses to ensure we hit the quota
+ const slotsRemainingInWeek = 7; // rough estimate
+ const ppNeeded = PP_PER_SUBJECT_PER_WEEK - ppCountThisWeek[subj];
+ if (roll < (ppNeeded / Math.max(1, slotsRemainingInWeek - i))) {
+ isPastPaper = true;
+ ppCountThisWeek[subj]++;
+ }
+ }
+
+ if (isPastPaper) {
+ const ppLabels = {
+ physics: 'Past paper — Physics',
+ maths: 'Past paper — Maths',
+ biology: 'Past paper — Biology'
+ };
+ return { subject: subj, topic: ppLabels[subj], rating: 'green', time: slotTimes[i], loc: slotLocs[i], isPastPaper: true };
+ }
+
+ const { topic, rating } = pickTopic(subj, phase, false);
+ return { subject: subj, topic, rating, time: slotTimes[i], loc: slotLocs[i] };
+ });
+
+ return { type: 'normal', exams: [], slots };
+}
+
+// BUILD TIMETABLE 
+function buildTimetable() {
+ buildQueues();
+ const nav = document.getElementById('weekNav');
+ const panels = document.getElementById('weekPanels');
+ nav.innerHTML = ''; panels.innerHTML = '';
+
+ const startDate = new Date('2026-03-23');
+
+ for (let w = 0; w < 13; w++) {
+ // Reset past paper counters for this week
+ ppCountThisWeek = { physics:0, maths:0, biology:0 };
+ const wStart = addDays(startDate, w*7);
+ const wEnd = addDays(wStart, 6);
+ const weekExams = EXAMS.filter(e => {
+ const ed = new Date(e.date);
+ return ed >= wStart && ed <= wEnd;
+ });
+
+ // Nav btn
+ const btn = document.createElement('button');
+ btn.className = 'wk-btn' + (w===0?' active':'') + (weekExams.length?' has-exam':'');
+ btn.textContent = `W${w+1}` + (weekExams.length?' ':'');
+ btn.title = `${fmt(wStart)} – ${fmt(wEnd)}`;
+ btn.onclick = (()=>{ const idx=w; return ()=>switchWeek(idx); })();
+ nav.appendChild(btn);
+
+ // Panel
+ const panel = document.createElement('div');
+ panel.className = 'week-panel' + (w===0?' active':'');
+ panel.id = 'week-'+w;
+
+ const examStrip = weekExams.length
+ ? '<div class="exam-strip">' + weekExams.map(e=>`<div class="exam-chip"> ${e.label} · ${new Date(e.date).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}</div>`).join('') + '</div>'
+ : '';
+
+ // Calendar grid
+ let calHTML = `
+ <div class="week-info">
+ <h2>Week ${w+1}</h2>
+ <span class="week-dates">${fmt(wStart)} – ${fmt(wEnd)}</span>
+ </div>
+ ${examStrip}
+ <div class="cal-grid">
+ <div class="cal-day-header">Mon</div>
+ <div class="cal-day-header">Tue</div>
+ <div class="cal-day-header">Wed</div>
+ <div class="cal-day-header">Thu</div>
+ <div class="cal-day-header">Fri</div>
+ <div class="cal-day-header">Sat</div>
+ <div class="cal-day-header">Sun</div>
+ `;
+
+ for (let d = 0; d < 7; d++) {
+ const day = addDays(wStart, d);
+ const dow = day.getDay(); // Mon=1
+ const ds = dateStr(day);
+ const examsOnDay = EXAMS.filter(e => e.date === ds);
+ const dayData = buildDaySlots(day, w);
+
+ const todayStr = dateStr(new Date());
+ const isToday = ds === todayStr;
+ let cellClass = 'cal-cell';
+ if (dow === 6) cellClass += ' is-sat';
+ if (dow === 0) cellClass += ' is-sunday';
+ if (examsOnDay.length) cellClass += ' is-exam';
+ if (isToday) cellClass += ' is-today';
+
+ const dateNum = day.getDate();
+ const examBadge = examsOnDay.length
+ ? examsOnDay.map(e=>`<div class="cal-exam-badge"> ${e.label}</div>`).join('')
+ : '';
+
+ // School lessons for this day
+ const lessons = (dow >= 1 && dow <= 5 && ds < '2026-05-08') ? (SCHOOL_LESSONS[dow] || []) : [];
+
+ // Build combined time-ordered list of lessons + revision slots
+ let combinedItems = [];
+ lessons.forEach(l => combinedItems.push({ time: l.time, type: 'lesson', data: l }));
+ if (dayData.type === 'rest') {
+ combinedItems = [];
+ } else if (dayData.slots) {
+ dayData.slots.forEach(s => combinedItems.push({ time: s.time, type: 'slot', data: s }));
+ }
+ combinedItems.sort((a, b) => a.time.localeCompare(b.time));
+
+ let bodyHTML = '';
+ if (dayData.type === 'rest') {
+ bodyHTML = ds > '2026-06-18' ? '<div class="rest-label"> Done!</div>' : '<div class="rest-label">Rest day</div>';
+ } else {
+ combinedItems.forEach(item => {
+ if (item.type === 'lesson') {
+ const l = item.data;
+ bodyHTML += `<div class="lesson-pill ${l.cls}">${l.time} ${l.label}</div>`;
+ } else {
+ const s = item.data;
+ const subCls = s.subject === 'biology' ? 'bio' : s.subject === 'maths' ? 'maths' : 'physics';
+ bodyHTML += `
+ <div class="rev-slot ${subCls}">
+ <div class="rev-slot-dot ${s.rating}"></div>
+ <div class="rev-slot-text">
+ <div class="rev-slot-subj">${s.subject === 'biology' ? 'Bio' : s.subject === 'maths' ? 'Maths' : 'Physics'} · ${s.time}${s.missed ? ' ' : ''}${s.isPastPaper ? ' ' : ''}</div>
+ <div class="rev-slot-topic" style="${s.isPastPaper ? 'font-style:italic;' : ''}">${s.topic}</div>
+ <div class="rev-slot-time">${s.loc}</div>
+ </div>
+ </div>`;
+ }
+ });
+ }
+
+ const clickable = dow !== 6;
+ calHTML += `
+ <div class="${cellClass}" ${clickable ? `onclick="openDayOverlay('${ds}',${w})"` : ''}>
+ <div class="cal-date-row">
+ <div class="cal-date-num">${dateNum}</div>
+ <div>${isToday ? '<span class="cal-today-label">TODAY</span>' : ''}${examBadge}</div>
+ </div>
+ <div class="cal-body">
+ ${bodyHTML}
+ </div>
+ </div>`;
+ }
+
+ calHTML += '</div>';
+ panel.innerHTML = calHTML;
+ panels.appendChild(panel);
+ }
+}
+
+function switchWeek(idx) {
+ document.querySelectorAll('.week-panel').forEach((p,i) => p.classList.toggle('active', i===idx));
+ document.querySelectorAll('.wk-btn').forEach((b,i) => b.classList.toggle('active', i===idx));
+ window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// DAY DETAIL OVERLAY 
+
+function openDayOverlay(ds, weekIdx) {
+ const parts = ds.split('-');
+ const date = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
+ const dow = date.getDay();
+ const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+ const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+ document.getElementById('dayOverlayLabel').textContent = `${dayNames[dow]} · Week ${weekIdx+1}`;
+ document.getElementById('dayOverlayTitle').textContent = `${date.getDate()} ${monthNames[date.getMonth()]}`;
+
+ // Rebuild queues and fast-forward seed to match this day
+ buildQueues();
+ seed = 12345;
+ const startDate = new Date('2026-03-23');
+ for (let w = 0; w < 13; w++) {
+ ppCountThisWeek = { physics:0, maths:0, biology:0 };
+ const wStart = addDays(startDate, w*7);
+ for (let d = 0; d < 7; d++) {
+ const day = addDays(wStart, d);
+ const thisDow = day.getDay();
+ const thisDs = dateStr(day);
+ const examsOnDay = EXAMS.filter(e => e.date === thisDs);
+ if (thisDs === ds && w === weekIdx) break;
+ if (thisDow === 6) continue;
+ if (examsOnDay.length) {
+ const es = examsOnDay[0].subj === 'biology' ? 'biology' : examsOnDay[0].subj;
+ pickTopic(es, w+1, true);
+ } else {
+ const [pw,mw,bw] = WEEK_WEIGHTS[Math.min(w,WEEK_WEIGHTS.length-1)];
+ const total = pw+mw+bw;
+ const norm2 = { physics:pw/total*3, maths:mw/total*3, biology:bw/total*3 };
+ let sc = 3;
+ if (thisDow===0) sc=4; else if (thisDow===5) sc=1;
+ const acc3={physics:0,maths:0,biology:0};
+ for(let i=0;i<sc;i++){
+ let best=null,bestVal=-99;
+ for(const s of SUBJ_ORDER){const rem=norm2[s]-acc3[s];if(rem>bestVal){bestVal=rem;best=s;}}
+ acc3[best]++;
+ pickTopic(best,w+1,false);
+ }
+ }
+ }
+ if (w === weekIdx) break;
+ }
+
+ const dayData = buildDaySlots(date, weekIdx);
+ const examsToday = EXAMS.filter(e => e.date === ds);
+ const lessons = (dow >= 1 && dow <= 5 && ds < '2026-05-08') ? (SCHOOL_LESSONS[dow] || []) : [];
+ const ratingLabels = { red:'Needs work', amber:'Getting there', green:'Confident' };
+
+ // Store slot topics for missed detection
+ if (dayData.slots) storeSlotTopics(ds, dayData.slots);
+
+ const totalSlots = dayData.slots ? dayData.slots.length : 0;
+ let tickedCount = 0;
+ if (dayData.slots) dayData.slots.forEach((_,i) => { if (loadTick(ds,i)) tickedCount++; });
+ const pct = totalSlots ? Math.round(tickedCount/totalSlots*100) : 0;
+
+ // Exam banners
+ const examBanners = examsToday.map(e => `
+ <div class="today-exam-banner" style="margin-bottom:0.75rem">
+ <div class="exam-icon"></div>
+ <div class="exam-text">
+ <strong>${e.label} — Today!</strong>
+ <span>Light review only. Stay calm, trust your preparation.</span>
+ </div>
+ </div>`).join('');
+
+ // School lessons
+ const lessonsHTML = lessons.length ? `
+ <div class="today-section-label">School today</div>
+ ${lessons.map(l => `
+ <div class="today-school-pill">
+ <div class="pill-time">${l.time}</div>
+ <div class="pill-name ${l.cls}">${l.label}</div>
+ </div>`).join('')}` : '';
+
+ // Progress bar
+ const progressHTML = totalSlots ? `
+ <div class="overlay-progress-wrap">
+ <div class="overlay-progress-label">
+ <span>Revision progress</span>
+ <span id="overlay-prog-label">${tickedCount} / ${totalSlots} done</span>
+ </div>
+ <div class="overlay-progress-bar-outer">
+ <div class="overlay-progress-bar-inner" id="overlay-prog-bar" style="width:${pct}%"></div>
+ </div>
+ </div>` : '';
+
+ // Rest day
+ if (dayData.type === 'rest') {
+ document.getElementById('dayOverlayBody').innerHTML = `
+ <div class="rest-screen" style="padding:2rem 1rem">
+ <div class="rest-icon"></div>
+ <h3>Rest Day</h3>
+ <p>Saturday is your day off. Recharge — you've earned it.</p>
+ </div>`;
+ document.getElementById('dayOverlay').classList.add('open');
+ return;
+ }
+
+ // Build slot cards
+ const slotsHTML = dayData.slots ? dayData.slots.map((s, i) => {
+ const ticked = loadTick(ds, i);
+ const subCls = s.subject === 'biology' ? 'bio' : s.subject === 'maths' ? 'maths' : 'physics';
+ const subjLabel = s.subject === 'biology' ? 'Biology' : s.subject === 'maths' ? 'Maths' : 'Physics';
+ return `
+ <div class="today-slot-card${ticked?' done':''}" id="ov-slot-card-${i}">
+ <div class="today-slot-header">
+ <div class="today-slot-subj ${subCls}">${subjLabel}</div>
+ <div class="today-slot-time-loc">${s.time} · ${s.loc}</div>
+ </div>
+ <div class="today-slot-body">
+ <div class="today-slot-info">
+ <div class="today-slot-topic${ticked?' done-strike':''}">${s.topic}</div>
+ <div class="today-slot-meta">
+ ${s.isPastPaper
+ ? '<span style="font-size:0.68rem;color:var(--text-muted)"> Past paper practice</span>'
+ : `<div class="today-rating-dot ${s.rating}"></div><div class="today-rating-label">${ratingLabels[s.rating]}</div>`}
+ ${s.missed ? '<span style="font-size:0.62rem;color:var(--amber)"> Carried over</span>' : ''}
+ ${ticked ? '<span style="font-size:0.62rem;color:var(--green)"> Completed</span>' : ''}
+ </div>
+ ${!ticked && !s.isPastPaper ? `<div style="margin-top:0.6rem;padding:0.6rem 0.75rem;background:var(--surface2);border-radius:5px;border-left:2px solid var(--border2);font-size:0.67rem;color:var(--text-muted);line-height:1.6"><span style="font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-dim);display:block;margin-bottom:0.3rem"> How to use this hour</span>${getRevisionAdvice(s.topic, s.rating, s.subject)}</div>` : ''}
+ ${!ticked && s.isPastPaper ? `<div style="margin-top:0.6rem;padding:0.6rem 0.75rem;background:var(--surface2);border-radius:5px;border-left:2px solid var(--border2);font-size:0.67rem;color:var(--text-muted);line-height:1.6"><span style="font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-dim);display:block;margin-bottom:0.3rem"> How to use this hour</span>Do a full past paper under <strong>timed, exam conditions</strong> — no notes. Then mark it strictly using the mark scheme. For every mark dropped, write a one-line note on <em>why</em> you lost it. Log your score in the Past Papers tab.</div>` : ''}
+ </div>
+ <button class="tick-btn${ticked?' ticked':''}" onclick="overlayToggleTick('${ds}',${i},'${s.subject}','${s.topic.replace(/'/g,"\'")}','${s.rating}')" id="ov-tick-btn-${i}">
+ ${ticked ? '' : ''}
+ </button>
+ </div>
+ </div>`;
+ }).join('') : '';
+
+ document.getElementById('dayOverlayBody').innerHTML = `
+ ${examBanners}
+ ${progressHTML}
+ ${lessonsHTML}
+ <div class="today-section-label" style="margin-top:${lessons.length?'1rem':'0'}">Revision slots</div>
+ ${slotsHTML || '<div style="color:var(--text-dim);font-size:0.75rem;padding:0.5rem 0">No revision slots scheduled.</div>'}`;
+
+ // Store ds and weekIdx for tick refreshing
+ document.getElementById('dayOverlay').dataset.ds = ds;
+ document.getElementById('dayOverlay').dataset.weekIdx = weekIdx;
+ document.getElementById('dayOverlay').classList.add('open');
+}
+
+function closeDayOverlay() {
+ document.getElementById('dayOverlay').classList.remove('open');
+ // Rebuild timetable so tick states show in calendar if needed
+}
+
+function overlayToggleTick(ds, idx, subj, topic, currentRating) {
+ const wasTicked = loadTick(ds, idx);
+ if (wasTicked) {
+ saveTick(ds, idx, false);
+ refreshOverlay(ds, parseInt(document.getElementById('dayOverlay').dataset.weekIdx));
+ } else {
+ saveTick(ds, idx, true);
+ clearMissed(subj, topic);
+ refreshOverlay(ds, parseInt(document.getElementById('dayOverlay').dataset.weekIdx));
+ // Prompt rating update
+ modalPendingSubj = subj;
+ modalPendingTopic = topic;
+ document.getElementById('modalTopicText').innerHTML = `How confident do you feel about <strong>${topic}</strong> now?`;
+ document.getElementById('ratingModal').classList.add('open');
+ }
+}
+
+function refreshOverlay(ds, weekIdx) {
+ openDayOverlay(ds, weekIdx);
+}
+
+// Update overlay progress bar
+function updateOverlayProgress(ds) {
+ const bar = document.getElementById('overlay-prog-bar');
+ const label = document.getElementById('overlay-prog-label');
+ if (!bar || !label) return;
+ const cards = document.querySelectorAll('[id^="ov-slot-card-"]');
+ const total = cards.length;
+ let done = 0;
+ for (let i=0;i<total;i++) { if (loadTick(ds,i)) done++; }
+ const pct = total ? Math.round(done/total*100) : 0;
+ bar.style.width = pct+'%';
+ label.textContent = done+' / '+total+' done';
+}
+
+// MISSED SLOT TRACKING 
+
+function getMissedTopics() {
+ try {
+ const saved = localStorage.getItem('alevel_missed');
+ return saved ? JSON.parse(saved) : {};
+ } catch(e) { return {}; }
+}
+
+function saveMissedTopics(missed) {
+ try { localStorage.setItem('alevel_missed', JSON.stringify(missed)); } catch(e) {}
+}
+
+// Call at midnight check / on load — mark any unticked slots from past days as missed
+function checkForMissedSlots() {
+ const todayDs = dateStr(new Date());
+ const start = new Date('2026-03-23');
+ const missed = getMissedTopics();
+ let changed = false;
+
+ // Scan ticks for all past days; any slot key that exists as '0' (unticked) = missed
+ // We also scan for keys that never got set (no entry = never opened that day = missed)
+ // Strategy: store a 'day_logged_YYYY-MM-DD' key when we build today, then check previous days
+ try {
+ const keys = Object.keys(localStorage);
+ keys.forEach(k => {
+ if (!k.startsWith('tick_')) return;
+ const parts = k.split('_'); // tick_YYYY-MM-DD_idx
+ if (parts.length < 3) return;
+ const ds = parts[1];
+ const idx = parseInt(parts[2]);
+ if (ds >= todayDs) return; // only past days
+ const val = localStorage.getItem(k);
+ if (val !== '1') {
+ // This slot was not ticked — we need to find which topic it was
+ // Topics are stored with day slot data; retrieve from slotTopicStore
+ const topicKey = 'slottopic_' + ds + '_' + idx;
+ const stored = localStorage.getItem(topicKey);
+ if (stored) {
+ const { subj, topic } = JSON.parse(stored);
+ const mKey = subj + '|' + topic;
+ if (!missed[mKey]) {
+ missed[mKey] = { subj, topic, count: 0 };
+ }
+ missed[mKey].count++;
+ changed = true;
+ // Remove the tick key so we don't double count
+ localStorage.removeItem(k);
+ localStorage.removeItem(topicKey);
+ }
+ }
+ });
+ } catch(e) {}
+
+ if (changed) saveMissedTopics(missed);
+}
+
+// Store topic info when a day's slots are built so we can retrieve later
+function storeSlotTopics(ds, slots) {
+ try {
+ slots.forEach((s, i) => {
+ const topicKey = 'slottopic_' + ds + '_' + i;
+ // Only store if not already stored (don't overwrite)
+ if (!localStorage.getItem(topicKey)) {
+ localStorage.setItem(topicKey, JSON.stringify({ subj: s.subject, topic: s.topic }));
+ }
+ });
+ } catch(e) {}
+}
+
+// Get missed topics for a subject as a prioritised list (most missed first)
+function getMissedForSubject(subj) {
+ const missed = getMissedTopics();
+ return Object.values(missed)
+ .filter(m => m.subj === subj)
+ .sort((a, b) => b.count - a.count)
+ .map(m => m.topic);
+}
+
+// Clear a topic from missed once it's been ticked
+function clearMissed(subj, topic) {
+ const missed = getMissedTopics();
+ const mKey = subj + '|' + topic;
+ if (missed[mKey]) {
+ delete missed[mKey];
+ saveMissedTopics(missed);
+ }
+}
+
+// TODAY PAGE 
+
+const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+// Tick storage key: "ticks_YYYY-MM-DD_slotIndex"
+function tickKey(ds, idx) { return 'tick_' + ds + '_' + idx; }
+
+function loadTick(ds, idx) {
+ try { return localStorage.getItem(tickKey(ds, idx)) === '1'; } catch(e) { return false; }
+}
+
+function saveTick(ds, idx, val) {
+ try { localStorage.setItem(tickKey(ds, idx), val ? '1' : '0'); } catch(e) {}
+}
+
+let modalPendingSubj = null;
+let modalPendingTopic = null;
+let modalPendingDs = null;
+let modalPendingIdx = null;
+
+function refreshSlotCard(ds, idx) {
+ // Rebuild today page to reflect tick state change
+ }
+
+function updateTodayProgress(ds) {
+ const bar = document.getElementById('today-prog-bar');
+ const label = document.getElementById('today-prog-label');
+ if (!bar || !label) return;
+ const cards = document.querySelectorAll('[id^="slot-card-"]');
+ const total = cards.length;
+ let done = 0;
+ for (let i = 0; i < total; i++) { if (loadTick(ds, i)) done++; }
+ const pct = total ? Math.round(done/total*100) : 0;
+ bar.style.width = pct + '%';
+ label.textContent = done + ' / ' + total + ' done';
+}
+
+function submitModalRating(newRating) {
+ if (modalPendingSubj && modalPendingTopic) {
+ if (!ratings[modalPendingSubj]) ratings[modalPendingSubj] = {};
+ ratings[modalPendingSubj][modalPendingTopic] = newRating;
+ saveRatings();
+ updateTLStats();
+ showToast('Rating updated to ' + newRating + ' ');
+ // Refresh tracker UI if built
+ buildTracker();
+ }
+ closeModal();
+ }
+
+function closeModal() {
+ document.getElementById('ratingModal').classList.remove('open');
+ modalPendingSubj = null; modalPendingTopic = null;
+}
+
+// COUNTDOWN PAGE 
+
+// School lessons per subject per day-of-week
+// Physics: Mon(1), Wed(1), Thu(1) = 3/week
+// Maths: Mon(2), Tue(1), Thu(1) = 4/week (Maths + Maths Support on Mon)
+// Biology: Tue(1), Wed(1), Fri(2) = 4/week (Bio + Bio Booster on Fri)
+// School ends 8 May 2026
+
+function buildCountdownPage() {
+ const today = new Date();
+ const todayDs = dateStr(today);
+ const schoolEndDs = '2026-05-08';
+ const container = document.getElementById('countdown-content');
+
+ function daysUntilExam(examDs) {
+ const parts = examDs.split('-');
+ const examDate = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
+ const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+ return Math.max(0, Math.ceil((examDate - todayMidnight) / (1000*60*60*24)));
+ }
+
+ // Count remaining school lessons per subject up to school end or exam date (whichever is sooner)
+ // Physics lessons: Mon(14:00), Wed(14:00-16:00 = 1 lesson), Thu(13:00)
+ // Maths lessons: Mon(09:00 + 10:00 = 2 lessons), Tue(15:00), Thu(10:00)
+ // Bio lessons: Tue(14:00), Wed(09:00-11:00 = 1 lesson), Fri(10:00 + 13:00 = 2 lessons)
+ const lessonDays = {
+ physics: [1, 3, 4], // Mon, Wed, Thu — 1 lesson each
+ maths: [1, 1, 2, 4], // Mon x2 (Maths + Support), Tue, Thu
+ biology: [2, 3, 5, 5], // Tue, Wed, Fri x2 (Bio + Booster)
+ };
+ // Simplified: lessons per week day (dow)
+ const lessonsPerDow = {
+ physics: { 1:1, 3:1, 4:1 },
+ maths: { 1:2, 2:1, 4:1 },
+ biology: { 2:1, 3:1, 5:2 },
+ };
+
+ function countLessons(subj, untilDs) {
+ const limitDs = untilDs < schoolEndDs ? untilDs : schoolEndDs;
+ let count = 0;
+ const cur = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+ while (true) {
+ const ds = dateStr(cur);
+ if (ds >= limitDs) break;
+ if (ds > todayDs) { // only future days
+ const dow = cur.getDay();
+ count += (lessonsPerDow[subj][dow] || 0);
+ }
+ cur.setDate(cur.getDate() + 1);
+ }
+ return count;
+ }
+
+ const examsWithSubj = [
+ { date:'2026-05-20', label:'Physics Paper 1', subj:'physics' },
+ { date:'2026-06-01', label:'Physics Paper 2', subj:'physics' },
+ { date:'2026-06-03', label:'Maths Paper 1', subj:'maths' },
+ { date:'2026-06-04', label:'Biology Paper 1', subj:'biology' },
+ { date:'2026-06-08', label:'Physics Paper 3', subj:'physics' },
+ { date:'2026-06-11', label:'Maths Paper 2', subj:'maths' },
+ { date:'2026-06-12', label:'Biology Paper 2', subj:'biology' },
+ { date:'2026-06-16', label:'Biology Paper 3', subj:'biology' },
+ { date:'2026-06-18', label:'Maths Paper 3', subj:'maths' },
+ ];
+
+ const subjCls = { physics:'physics-card', maths:'maths-card', biology:'bio-card' };
+ const subjLabel = { physics:'Physics', maths:'Maths', biology:'Biology' };
+
+ const cardsHTML = examsWithSubj.map(e => {
+ const days = daysUntilExam(e.date);
+ const lessons = countLessons(e.subj, e.date);
+ const parts = e.date.split('-');
+ const dateObj = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
+ const dateFormatted = dateObj.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'long',year:'numeric'});
+ const urgent = days <= 14 ? 'color:var(--red)' : days <= 30 ? 'color:var(--amber)' : '';
+ return `
+ <div class="countdown-card ${subjCls[e.subj]}">
+ <div>
+ <div class="exam-name">${e.label}</div>
+ <div class="exam-date-label">${dateFormatted}</div>
+ ${lessons > 0 ? `<div class="exam-date-label" style="margin-top:0.3rem"> ${lessons} school lesson${lessons!==1?'s':''} remaining</div>` : '<div class="exam-date-label" style="margin-top:0.3rem;color:var(--amber)"> No more school lessons before this exam</div>'}
+ </div>
+ <div>
+ <div class="days-left" style="${urgent}">${days}<span>days to go</span></div>
+ </div>
+ </div>`;
+ }).join('');
+
+ container.innerHTML = `
+ <div class="today-date-banner">
+ <h2>Your <em>Exams</em></h2>
+ </div>
+ <div class="countdown-grid">${cardsHTML}</div>`;
+}
+
+// PAST PAPERS PAGE 
+
+const PAST_PAPERS = {
+ physics: [
+ {year:2024,paper:1},{year:2024,paper:2},{year:2024,paper:3},
+ {year:2023,paper:1},{year:2023,paper:2},{year:2023,paper:3},
+ {year:2022,paper:1},{year:2022,paper:2},{year:2022,paper:3},
+ {year:2021,paper:1},{year:2021,paper:2},{year:2021,paper:3},
+ {year:2020,paper:1},{year:2020,paper:2},{year:2020,paper:3},
+ ],
+ maths: [
+ {year:2024,paper:1},{year:2024,paper:2},{year:2024,paper:3},
+ {year:2023,paper:1},{year:2023,paper:2},{year:2023,paper:3},
+ {year:2022,paper:1},{year:2022,paper:2},{year:2022,paper:3},
+ {year:2021,paper:1},{year:2021,paper:2},{year:2021,paper:3},
+ {year:2020,paper:1},{year:2020,paper:2},{year:2020,paper:3},
+ ],
+ biology: [
+ {year:2024,paper:1},{year:2024,paper:2},{year:2024,paper:3},
+ {year:2023,paper:1},{year:2023,paper:2},{year:2023,paper:3},
+ {year:2022,paper:1},{year:2022,paper:2},{year:2022,paper:3},
+ {year:2021,paper:1},{year:2021,paper:2},{year:2021,paper:3},
+ {year:2020,paper:1},{year:2020,paper:2},{year:2020,paper:3},
+ ]
+};
+
+function ppKey(subj, year, paper) { return `pp_${subj}_${year}_${paper}`; }
+
+function getPPData() {
+ try { return JSON.parse(localStorage.getItem('alevel_pp2') || '{}'); } catch(e) { return {}; }
+}
+
+function savePPData(data) {
+ try { localStorage.setItem('alevel_pp2', JSON.stringify(data)); } catch(e) {}
+}
+
+function getPPEntry(subj, year, paper) {
+ return getPPData()[ppKey(subj, year, paper)] || null;
+}
+
+// Status: null = not started, 'inprogress' = in progress, 'done' = completed
+let ppCurrentSubj = 'physics';
+let ppEditKey = null;
+
+function buildPastPapersPage() {
+  const container = document.getElementById('pp-content');
+  const data = getPPData();
+  const subjColour = { physics:'var(--phy)', maths:'var(--mat)', biology:'var(--bio)' };
+  const subjShort  = { physics:'Physics', maths:'Maths', biology:'Biology' };
+
+  let totalDone=0, totalInProg=0, totalAll=0;
+  ['physics','maths','biology'].forEach(function(subj) {
+    PAST_PAPERS[subj].forEach(function(p) {
+      totalAll++;
+      var e = getPPEntry(subj,p.year,p.paper);
+      if (e && e.status==='done') totalDone++;
+      else if (e && e.status==='inprogress') totalInProg++;
+    });
+  });
+
+  // Completed list
+  var allCompleted = [];
+  ['physics','maths','biology'].forEach(function(subj) {
+    PAST_PAPERS[subj].forEach(function(p) {
+      var e = getPPEntry(subj,p.year,p.paper);
+      if (e && e.status==='done') {
+        allCompleted.push({ subj:subj, year:p.year, paper:p.paper, score:e.score||'', time:e.time||'', date:e.date||'', key:ppKey(subj,p.year,p.paper) });
+      }
+    });
+  });
+
+  // In progress list
+  var allInProg = [];
+  ['physics','maths','biology'].forEach(function(subj) {
+    PAST_PAPERS[subj].forEach(function(p) {
+      var e = getPPEntry(subj,p.year,p.paper);
+      if (e && e.status==='inprogress') {
+        allInProg.push({ subj:subj, year:p.year, paper:p.paper, key:ppKey(subj,p.year,p.paper), startTime:e.startTime||null, elapsed:e.elapsed||0, paused:e.paused||false });
+      }
+    });
+  });
+
+  var completedHTML = allCompleted.length ? allCompleted.map(function(c) {
+    return '<div class="pp-completed-row">' +
+      '<div class="pp-completed-badge" style="border-color:' + subjColour[c.subj] + ';color:' + subjColour[c.subj] + '">' + subjShort[c.subj] + '</div>' +
+      '<div class="pp-completed-info">' +
+        '<div class="pp-completed-name">' + c.year + ' — Paper ' + c.paper + '</div>' +
+        '<div class="pp-completed-meta">' +
+          (c.score ? '<span class="pp-score-display">' + c.score + '</span>' : '') +
+          (c.time ? '<span class="pp-time-display">' + formatMins(c.time) + '</span>' : '') +
+          '<span class="pp-date-display">' + c.date + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<div style="display:flex;gap:0.4rem">' +
+        '<button class="pp-action-btn edit-btn" onclick="openEditTime(\'' + c.key + '\')" >Edit time</button>' +
+        '<button class="pp-action-btn reset-btn" onclick="ppResetEntry(\'' + c.key + '\')">X</button>' +
+      '</div>' +
+    '</div>';
+  }).join('')
+  : '<div style="color:var(--text-dim);font-size:0.72rem;padding:0.5rem 0">No completed papers yet.</div>';
+
+  var inProgHTML = allInProg.length ? allInProg.map(function(c) {
+    var elapsed = c.elapsed || 0;
+    var isRunning = c.startTime && !c.paused;
+    if (isRunning) elapsed += Math.floor((Date.now() - c.startTime) / 1000);
+    var timeStr = formatSeconds(elapsed);
+    return '<div class="pp-completed-row" style="border-color:rgba(251,146,60,0.3);background:rgba(251,146,60,0.04)">' +
+      '<div class="pp-completed-badge" style="border-color:' + subjColour[c.subj] + ';color:' + subjColour[c.subj] + '">' + subjShort[c.subj] + '</div>' +
+      '<div class="pp-completed-info">' +
+        '<div class="pp-completed-name">' + c.year + ' — Paper ' + c.paper + '</div>' +
+        '<div class="pp-completed-meta">' +
+          '<span class="pp-time-display" id="live-timer-' + c.key + '">' + timeStr + '</span>' +
+          '<span class="pp-status-badge inprog">' + (isRunning ? 'Running' : 'Paused') + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<div style="display:flex;gap:0.4rem;flex-wrap:wrap">' +
+        (isRunning
+          ? '<button class="pp-timer-btn pause" onclick="ppPauseTimer(\'' + c.key + '\')">Pause</button>'
+          : '<button class="pp-timer-btn start" onclick="ppResumeTimer(\'' + c.key + '\')">Resume</button>') +
+        '<button class="pp-timer-btn finish" onclick="ppFinishTimer(\'' + c.key + '\')">Finish</button>' +
+        '<button class="pp-action-btn reset-btn" onclick="ppResetEntry(\'' + c.key + '\')">X</button>' +
+      '</div>' +
+    '</div>';
+  }).join('')
+  : '<div style="color:var(--text-dim);font-size:0.72rem;padding:0.5rem 0">Nothing in progress.</div>';
+
+  container.innerHTML =
+    '<div class="today-date-banner"><h2>Past <em>Papers</em></h2></div>' +
+    '<div class="pp-stats-bar" style="margin-bottom:2rem">' +
+      '<div class="pp-stat"><span class="pp-stat-num done-col">' + totalDone + '</span><span class="pp-stat-lbl">Done</span></div>' +
+      '<div class="pp-stat"><span class="pp-stat-num inprog-col">' + totalInProg + '</span><span class="pp-stat-lbl">In Progress</span></div>' +
+      '<div class="pp-stat"><span class="pp-stat-num">' + (totalAll-totalDone-totalInProg) + '</span><span class="pp-stat-lbl">Not started</span></div>' +
+      '<div class="pp-stat"><span class="pp-stat-num">' + totalAll + '</span><span class="pp-stat-lbl">Total</span></div>' +
+    '</div>' +
+    '<div class="pp-terminal">' +
+      '<div class="pp-terminal-header">Start a Past Paper</div>' +
+      '<div class="pp-terminal-body">' +
+        '<div class="pp-form-row">' +
+          '<div class="pp-form-field"><label class="pp-form-label">Subject</label>' +
+            '<select class="pp-select" id="pp-sel-subj">' +
+              '<option value="physics">Physics (AQA)</option>' +
+              '<option value="maths">Maths (AQA)</option>' +
+              '<option value="biology">Biology (OCR)</option>' +
+            '</select></div>' +
+          '<div class="pp-form-field"><label class="pp-form-label">Year</label>' +
+            '<select class="pp-select" id="pp-sel-year">' +
+              '<option value="2024">2024</option><option value="2023">2023</option>' +
+              '<option value="2022">2022</option><option value="2021">2021</option><option value="2020">2020</option>' +
+            '</select></div>' +
+          '<div class="pp-form-field"><label class="pp-form-label">Paper</label>' +
+            '<select class="pp-select" id="pp-sel-paper">' +
+              '<option value="1">Paper 1</option><option value="2">Paper 2</option><option value="3">Paper 3</option>' +
+            '</select></div>' +
+        '</div>' +
+        '<div class="pp-form-actions">' +
+          '<button class="pp-timer-btn start" onclick="ppStartTimer()">Start Timer</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="countdown-section-label" style="margin-top:2rem">In Progress</div>' +
+    inProgHTML +
+    '<div class="countdown-section-label" style="margin-top:1.5rem">Completed Papers</div>' +
+    completedHTML;
+
+  // Start live timer ticks
+  startLiveTimers();
+}
+
+// ── Timer helpers ─────────────────────────────────────────────────────────────
+var liveTimerInterval = null;
+
+function formatSeconds(secs) {
+  var h = Math.floor(secs / 3600);
+  var m = Math.floor((secs % 3600) / 60);
+  var s = secs % 60;
+  if (h > 0) return h + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+}
+
+function formatMins(mins) {
+  var m = parseInt(mins);
+  if (isNaN(m)) return mins;
+  if (m >= 60) return Math.floor(m/60) + 'h ' + (m%60) + 'm';
+  return m + ' mins';
+}
+
+function startLiveTimers() {
+  if (liveTimerInterval) clearInterval(liveTimerInterval);
+  liveTimerInterval = setInterval(function() {
+    var data = getPPData();
+    Object.keys(data).forEach(function(key) {
+      var e = data[key];
+      if (e.status === 'inprogress' && e.startTime && !e.paused) {
+        var elapsed = (e.elapsed || 0) + Math.floor((Date.now() - e.startTime) / 1000);
+        var el = document.getElementById('live-timer-' + key);
+        if (el) el.textContent = formatSeconds(elapsed);
+      }
+    });
+  }, 1000);
+}
+
+function ppStartTimer() {
+  var subj  = document.getElementById('pp-sel-subj').value;
+  var year  = parseInt(document.getElementById('pp-sel-year').value);
+  var paper = parseInt(document.getElementById('pp-sel-paper').value);
+  var key = ppKey(subj, year, paper);
+  var data = getPPData();
+  if (data[key] && data[key].status === 'inprogress') {
+    showToast('This paper is already in progress');
+    return;
+  }
+  if (!data[key]) data[key] = {};
+  data[key].status = 'inprogress';
+  data[key].startTime = Date.now();
+  data[key].elapsed = 0;
+  data[key].paused = false;
+  savePPData(data);
+  buildPastPapersPage();
+  showToast('Timer started');
+}
+
+function ppPauseTimer(key) {
+  var data = getPPData();
+  if (!data[key]) return;
+  var now = Date.now();
+  data[key].elapsed = (data[key].elapsed || 0) + Math.floor((now - data[key].startTime) / 1000);
+  data[key].startTime = null;
+  data[key].paused = true;
+  savePPData(data);
+  buildPastPapersPage();
+}
+
+function ppResumeTimer(key) {
+  var data = getPPData();
+  if (!data[key]) return;
+  data[key].startTime = Date.now();
+  data[key].paused = false;
+  savePPData(data);
+  buildPastPapersPage();
+}
+
+var ppFinishKey = null;
+
+var ppFinishKey = null;
+var ppFinishMins = 0;
+
+function ppFinishTimer(key) {
+  var data = getPPData();
+  if (!data[key]) return;
+  var elapsed = data[key].elapsed || 0;
+  if (data[key].startTime && !data[key].paused) {
+    elapsed += Math.floor((Date.now() - data[key].startTime) / 1000);
+  }
+  ppFinishKey = key;
+  ppFinishMins = Math.round(elapsed / 60);
+  document.getElementById('finishScoreInput').value = '';
+  document.getElementById('finishTimeDisplay').textContent = 'Time: ' + formatMins(ppFinishMins);
+  document.getElementById('finishScoreOverlay').classList.add('open');
+  setTimeout(function() { document.getElementById('finishScoreInput').focus(); }, 100);
+}
+
+function confirmFinish() {
+  var score = document.getElementById('finishScoreInput').value.trim();
+  if (!score) { showToast('Please enter your score'); return; }
+  var data = getPPData();
+  data[ppFinishKey].status = 'done';
+  data[ppFinishKey].score = score;
+  data[ppFinishKey].time = ppFinishMins;
+  data[ppFinishKey].date = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  delete data[ppFinishKey].startTime;
+  delete data[ppFinishKey].paused;
+  savePPData(data);
+  document.getElementById('finishScoreOverlay').classList.remove('open');
+  if (liveTimerInterval) clearInterval(liveTimerInterval);
+  buildPastPapersPage();
+  showToast('Paper complete');
+}
+
+function cancelFinish() {
+  document.getElementById('finishScoreOverlay').classList.remove('open');
+  ppFinishKey = null;
+}
+
+var editTimeKey = null;
+
+function openEditTime(key) {
+  editTimeKey = key;
+  var data = getPPData();
+  var existing = (data[key] && data[key].time) ? data[key].time : '';
+  document.getElementById('editTimeInput').value = existing;
+  document.getElementById('editTimeOverlay').classList.add('open');
+}
+
+function closeEditTime() {
+  document.getElementById('editTimeOverlay').classList.remove('open');
+  editTimeKey = null;
+}
+
+function saveEditTime() {
+  var val = document.getElementById('editTimeInput').value.trim();
+  if (!val) { showToast('Please enter a time'); return; }
+  var data = getPPData();
+  if (!data[editTimeKey]) data[editTimeKey] = {};
+  data[editTimeKey].time = parseInt(val);
+  savePPData(data);
+  closeEditTime();
+  buildPastPapersPage();
+  showToast('Time updated');
+}
+
+function ppResetEntry(key) {
+  var data = getPPData();
+  delete data[key];
+  savePPData(data);
+  if (liveTimerInterval) clearInterval(liveTimerInterval);
+  buildPastPapersPage();
+  showToast('Entry removed');
+}
+
+function openPPScoreEntry(key, label) { ppEditKey = key; }
+function closeScoreModal() {}
+function saveScore() {}
+
+// REVISION ADVICE FOR TODAY SLOTS 
+function getRevisionAdvice(topic, rating, subject) {
+ const adviceByRating = {
+ red: [
+ `Start from scratch — watch a YouTube explanation of <strong>${topic}</strong> first (try PMT or Science Shorts), then make a condensed set of notes in your own words. Don't attempt practice questions until you feel you understand the basics.`,
+ `For <strong>${topic}</strong> you're starting from low confidence. Use the PMT revision notes to build understanding first, then try 2–3 worked examples before attempting any questions yourself.`,
+ `<strong>${topic}</strong> is a weak area — spend the first 20 mins reading through your class notes or a textbook explanation, then spend 30 mins on PMT flashcards to test yourself. Leave the last 10 mins to write a summary.`,
+ ],
+ amber: [
+ `You have some understanding of <strong>${topic}</strong> — use this session to close the gaps. Try a past paper question on this topic first to identify exactly what trips you up, then go back to your notes to fix those specific points.`,
+ `For <strong>${topic}</strong> focus on the tricky details you keep getting wrong. Do 20 mins of flashcard practice, then attempt a timed exam question and mark it against the mark scheme carefully.`,
+ `<strong>${topic}</strong> is almost there — spend this hour doing exam-style questions under timed conditions. After each question, check your answer against the mark scheme and note any mark scheme language you missed.`,
+ ],
+ green: [
+ `You're confident with <strong>${topic}</strong> — use this session to maintain it. Do a quick 10-min brain dump of everything you know, then spend 30 mins on past paper questions to stay sharp. Aim for full marks.`,
+ `Light review for <strong>${topic}</strong> — test yourself with PMT flashcards for 15 mins, then attempt one full exam question under timed conditions. If you get full marks, move on.`,
+ `<strong>${topic}</strong> is solid — spend 20 mins on the hardest questions you can find on this topic to really cement it, then use the remaining time to help a weaker linked topic.`,
+ ]
+ };
+
+ const options = adviceByRating[rating] || adviceByRating.amber;
+ // Pick deterministically based on topic string length
+ const idx = topic.length % options.length;
+ return options[idx];
+}
+
+
+function filterTLTopics(query) {
+  var q = query.toLowerCase().trim();
+
+  // Get currently active subject panel only
+  var activeSub = document.querySelector('.tl-sub-btn.active');
+  var activeSubj = 'physics';
+  if (activeSub) {
+    activeSubj = activeSub.classList.contains('phy') ? 'physics' : activeSub.classList.contains('mat') ? 'maths' : 'biology';
+  }
+  var activePanel = document.getElementById('tl-panel-' + activeSubj);
+
+  if (!q) {
+    if (activePanel) {
+      activePanel.querySelectorAll('.tl-topic-row').forEach(function(r) { r.classList.remove('tl-hidden'); });
+      activePanel.querySelectorAll('.tl-section').forEach(function(s) { s.classList.remove('tl-section-hidden'); });
+    }
+    return;
+  }
+
+  if (!activePanel) return;
+
+  activePanel.querySelectorAll('.tl-topic-row').forEach(function(row) {
+    var name = '';
+    var nameEl = row.querySelector('.tl-topic-name');
+    if (nameEl) name = nameEl.textContent.toLowerCase();
+    row.classList.toggle('tl-hidden', name.indexOf(q) === -1);
+  });
+
+  activePanel.querySelectorAll('.tl-section').forEach(function(sec) {
+    var visibleRows = sec.querySelectorAll('.tl-topic-row:not(.tl-hidden)');
+    sec.classList.toggle('tl-section-hidden', visibleRows.length === 0);
+    if (visibleRows.length > 0) sec.classList.remove('collapsed');
+  });
+}
+
+// TRAFFIC LIGHT TRACKER 
+function buildTracker() {
+ const container = document.getElementById('tl-panels');
+ container.innerHTML = '';
+
+ for (const [subjKey, subjData] of Object.entries(SUBJECTS)) {
+ const panel = document.createElement('div');
+ panel.className = 'tl-subject-panel' + (subjKey==='physics'?' active':'');
+ panel.id = 'tl-panel-'+subjKey;
+
+ const total = subjData.sections.reduce((a,s)=>a+s.topics.length,0);
+
+ panel.innerHTML = `
+ <div class="tl-prog-wrap">
+ <div class="tl-prog-label">
+ <span id="tl-rated-${subjKey}">0</span> / ${total} rated
+ <span id="tl-subj-counts-${subjKey}"></span>
+ </div>
+ <div class="tl-prog-bar"><div class="tl-prog-inner" id="tl-prog-${subjKey}" style="width:0%"></div></div>
+ </div>
+ `;
+
+ for (const sec of subjData.sections) {
+ const secEl = document.createElement('div');
+ secEl.className = 'tl-section';
+
+ const header = document.createElement('div');
+ header.className = 'tl-sec-header';
+ header.innerHTML = `<span>${sec.name}</span><span class="tl-sec-chevron"></span>`;
+ header.onclick = () => secEl.classList.toggle('collapsed');
+ secEl.appendChild(header);
+
+ const body = document.createElement('div');
+ body.className = 'tl-sec-body';
+
+ for (const topic of sec.topics) {
+ const row = document.createElement('div');
+ const currentRating = ratings[subjKey]?.[topic] || null;
+ row.className = 'tl-topic-row' + (currentRating ? ' is-'+currentRating : '');
+ row.id = `tlrow-${subjKey}-${topic.replace(/[^a-z0-9]/gi,'_')}`;
+
+ const btns = document.createElement('div');
+ btns.className = 'tl-btns';
+
+ for (const col of ['red','amber','green']) {
+ const btn = document.createElement('button');
+ btn.className = 'tl-btn ' + col + (currentRating===col?' sel':'');
+ btn.onclick = () => setRating(subjKey, topic, col, row, btns);
+ btns.appendChild(btn);
+ }
+
+ row.innerHTML = `<div class="tl-topic-name">${topic}</div>`;
+ row.appendChild(btns);
+ body.appendChild(row);
+ }
+
+ secEl.appendChild(body);
+ panel.appendChild(secEl);
+ }
+
+ container.appendChild(panel);
+ }
+
+ updateTLStats();
+}
+
+function setRating(subj, topic, colour, row, btns) {
+ if (!ratings[subj]) ratings[subj] = {};
+ ratings[subj][topic] = colour;
+ saveRatings();
+
+ btns.querySelectorAll('.tl-btn').forEach(b => {
+ b.classList.toggle('sel', b.classList.contains(colour));
+ });
+ row.classList.remove('is-red','is-amber','is-green');
+ row.classList.add('is-'+colour);
+
+ updateTLStats();
+ showToast('Saved ');
+}
+
+function switchTLSubject(subj) {
+ document.querySelectorAll('.tl-subject-panel').forEach(p => p.classList.remove('active'));
+ document.getElementById('tl-panel-'+subj).classList.add('active');
+ document.querySelectorAll('.tl-sub-btn').forEach(b => b.classList.remove('active'));
+ document.querySelector(`.tl-sub-btn.${SUBJECTS[subj].cls}`).classList.add('active');
+}
+
+function updateTLStats() {
+ let totalR=0, totalA=0, totalG=0;
+
+ for (const [subjKey, subjData] of Object.entries(SUBJECTS)) {
+ let r=0,a=0,g=0,rated=0;
+ const total = subjData.sections.reduce((acc,s)=>acc+s.topics.length,0);
+
+ for (const sec of subjData.sections) {
+ for (const topic of sec.topics) {
+ const v = ratings[subjKey]?.[topic];
+ if (v==='red') {r++;rated++;}
+ else if (v==='amber') {a++;rated++;}
+ else if (v==='green') {g++;rated++;}
+ }
+ }
+
+ const ratedEl = document.getElementById('tl-rated-'+subjKey);
+ const progEl = document.getElementById('tl-prog-'+subjKey);
+ const countsEl = document.getElementById('tl-subj-counts-'+subjKey);
+ if (ratedEl) ratedEl.textContent = rated;
+ if (progEl) progEl.style.width = (rated/total*100)+'%';
+ if (countsEl) countsEl.innerHTML = `<span style="color:var(--red)">${r}</span> <span style="color:var(--amber)">🟡${a}</span> <span style="color:var(--green)">🟢${g}</span>`;
+
+ totalR+=r; totalA+=a; totalG+=g;
+ }
+
+ document.getElementById('tl-total-red').textContent = totalR;
+ document.getElementById('tl-total-amber').textContent = totalA;
+ document.getElementById('tl-total-green').textContent = totalG;
+
+
+}
+
+
+// PRACTICE QUESTIONS
+const PQ_TOPICS = {
+  physics: [
+    'SI units & prefixes','Uncertainty & errors','Atomic structure','Particles & antiparticles',
+    'Quarks & hadrons','Feynman diagrams','Photoelectric effect','Wave-particle duality',
+    'Progressive waves','Stationary waves','Diffraction & interference',"Young's double slit",
+    "Refraction & Snell's law",'Scalars & vectors','Motion (SUVAT)',"Newton's laws",
+    'Momentum & impulse','Work, energy & power','Stress, strain & Young modulus',
+    'Resistance & Ohm law','I-V characteristics','Series & parallel circuits',
+    'EMF & internal resistance','Potential dividers','Circular motion','Simple harmonic motion',
+    'Thermal physics & ideal gases','Kinetic theory','Gravitational fields','Electric fields',
+    'Capacitors','Electromagnetic induction','Radioactive decay','Nuclear binding energy',
+    'Astrophysics & telescopes','Hertzsprung-Russell diagram','Hubble law & cosmology'
+  ],
+  maths: [
+    'Quadratics','Equations & inequalities','Graphs & transformations','Partial fractions',
+    'Functions & mappings','Circles (coordinate geometry)','Binomial expansion',
+    'Arithmetic & geometric sequences','Trigonometric identities','Addition formulae',
+    'Radians & arc length','Logarithms & exponentials','Differentiation from first principles',
+    'Chain rule','Product & quotient rule','Implicit differentiation','Integration by substitution',
+    'Integration by parts','Differential equations','Vectors (3D)','Newton-Raphson method',
+    'Probability distributions','Binomial distribution','Normal distribution','Hypothesis testing',
+    'Correlation & regression','Kinematics (calculus)','Moments','Projectile motion','Proof'
+  ],
+  biology: [
+    'Cell structure','Biological molecules','Enzyme action & inhibition','Cell membranes',
+    'Mitosis & meiosis','Gas exchange','Haemoglobin & oxygen transport','Heart & cardiac cycle',
+    'Xylem & transpiration','Immune response','Biodiversity & classification','Natural selection',
+    'Homeostasis','Kidneys & osmoregulation','Nervous system & synapses','Muscle contraction',
+    'Photosynthesis (light reactions)','Calvin cycle','Respiration (glycolysis & Krebs)',
+    'Oxidative phosphorylation','DNA replication','Transcription & translation',
+    'Genetic inheritance','Hardy-Weinberg principle','Ecosystems & energy flow',
+    'Nitrogen & carbon cycles','DNA technology & PCR','Genetic engineering','Stem cells'
+  ]
+};
+
+const SUBJ_COLOUR = { physics: 'var(--phy)', maths: 'var(--mat)', biology: 'var(--bio)' };
+const SUBJ_LABEL  = { physics: 'Physics', maths: 'Maths', biology: 'Biology' };
+
+function updatePQTopics() {
+  var subj = document.getElementById('pq-subj').value;
+  var sel  = document.getElementById('pq-topic');
+  sel.innerHTML = PQ_TOPICS[subj].map(function(t) {
+    return '<option value="' + t + '">' + t + '</option>';
+  }).join('');
+}
+
+// Canvas state
+var pqCanvas, pqCtx, pqDrawing = false, pqTool = 'pen', pqHistory = [], pqStrokeSize = 2;
+var pqCurrentQuestion = null;
+var pqCurrentMarkScheme = null;
+var pqMarkSchemeVisible = false;
+
+function initCanvas() {
+  pqCanvas = document.getElementById('pq-canvas');
+  if (!pqCanvas) return;
+  // Set canvas size
+  pqCanvas.width = pqCanvas.offsetWidth || 700;
+  pqCanvas.height = 400;
+  pqCtx = pqCanvas.getContext('2d');
+  pqCtx.fillStyle = '#1a1a1a';
+  pqCtx.fillRect(0, 0, pqCanvas.width, pqCanvas.height);
+  pqHistory = [];
+
+  // Mouse events
+  pqCanvas.addEventListener('mousedown', pqStartDraw);
+  pqCanvas.addEventListener('mousemove', pqDraw);
+  pqCanvas.addEventListener('mouseup', pqEndDraw);
+  pqCanvas.addEventListener('mouseleave', pqEndDraw);
+
+  // Touch/Pencil events
+  pqCanvas.addEventListener('touchstart', pqTouchStart, { passive: false });
+  pqCanvas.addEventListener('touchmove',  pqTouchMove,  { passive: false });
+  pqCanvas.addEventListener('touchend',   pqEndDraw);
+}
+
+function getPos(e) {
+  var rect = pqCanvas.getBoundingClientRect();
+  var scaleX = pqCanvas.width  / rect.width;
+  var scaleY = pqCanvas.height / rect.height;
+  return {
+    x: (e.clientX - rect.left) * scaleX,
+    y: (e.clientY - rect.top)  * scaleY
+  };
+}
+
+function pqStartDraw(e) {
+  pqDrawing = true;
+  pqHistory.push(pqCtx.getImageData(0, 0, pqCanvas.width, pqCanvas.height));
+  if (pqHistory.length > 30) pqHistory.shift();
+  var pos = getPos(e);
+  pqCtx.beginPath();
+  pqCtx.moveTo(pos.x, pos.y);
+}
+
+function pqDraw(e) {
+  if (!pqDrawing) return;
+  e.preventDefault();
+  var pos = getPos(e);
+  pqCtx.lineWidth   = pqTool === 'eraser' ? parseInt(pqStrokeSize) * 6 : parseInt(pqStrokeSize);
+  pqCtx.strokeStyle = pqTool === 'eraser' ? '#1a1a1a' : '#f0ede8';
+  pqCtx.lineCap     = 'round';
+  pqCtx.lineJoin    = 'round';
+  pqCtx.lineTo(pos.x, pos.y);
+  pqCtx.stroke();
+  pqCtx.beginPath();
+  pqCtx.moveTo(pos.x, pos.y);
+}
+
+function pqEndDraw() { pqDrawing = false; pqCtx && pqCtx.beginPath(); }
+
+function pqTouchStart(e) {
+  e.preventDefault();
+  var touch = e.touches[0];
+  pqStartDraw({ clientX: touch.clientX, clientY: touch.clientY });
+}
+
+function pqTouchMove(e) {
+  e.preventDefault();
+  var touch = e.touches[0];
+  pqDraw({ clientX: touch.clientX, clientY: touch.clientY, preventDefault: function(){} });
+}
+
+function setTool(tool) {
+  pqTool = tool;
+  document.getElementById('btn-pen').classList.toggle('active', tool === 'pen');
+  document.getElementById('btn-eraser').classList.toggle('active', tool === 'eraser');
+}
+
+function clearCanvas() {
+  if (!pqCtx) return;
+  pqHistory.push(pqCtx.getImageData(0, 0, pqCanvas.width, pqCanvas.height));
+  pqCtx.fillStyle = '#1a1a1a';
+  pqCtx.fillRect(0, 0, pqCanvas.width, pqCanvas.height);
+}
+
+function undoCanvas() {
+  if (!pqCtx || pqHistory.length === 0) return;
+  pqCtx.putImageData(pqHistory.pop(), 0, 0);
+}
+
+document.getElementById('pq-stroke-size') && document.getElementById('pq-stroke-size').addEventListener('input', function() {
+  pqStrokeSize = this.value;
+});
+
+// Question bank — original spec-aligned questions
+const QUESTION_BANK = {
+  physics: {
+    'Photoelectric effect': {
+      1: { q: 'State what is meant by the work function of a metal.', ms: '(1) The minimum energy required to release an electron from the surface of the metal. [1]' },
+      2: { q: 'Explain why increasing the intensity of light below the threshold frequency does not cause photoelectric emission.', ms: '(1) Photons interact with electrons one-to-one. (2) Each photon below threshold frequency has insufficient energy to liberate an electron, regardless of intensity. [2]' },
+      3: { q: 'Light of frequency 8.0 x 10^14 Hz is incident on a metal surface with work function 2.5 eV. Calculate the maximum kinetic energy of emitted photoelectrons.', ms: '(1) E = hf = 6.63e-34 x 8.0e14 = 5.30e-19 J. (2) Work function = 2.5 x 1.6e-19 = 4.0e-19 J. (3) KE_max = 5.30e-19 - 4.0e-19 = 1.3e-19 J. [3]' },
+      4: { q: 'A metal has a threshold frequency of 5.5 x 10^14 Hz. (a) Calculate the work function in eV. (b) Explain what happens when light of frequency 4.0 x 10^14 Hz is incident on the metal regardless of intensity.', ms: '(a)(1) phi = hf = 6.63e-34 x 5.5e14 = 3.65e-19 J. (2) = 2.28 eV [2]. (b)(1) Frequency below threshold. (2) Photon energy less than work function so no emission occurs. [2]' },
+      5: { q: 'Explain, with reference to photon model, why a minimum frequency of light is needed to cause photoelectric emission and why the maximum kinetic energy of emitted electrons is independent of intensity.', ms: '(1) Each photon gives all its energy to one electron. (2) Photon must have energy greater than or equal to the work function. (3) Energy of photon depends only on frequency E=hf. (4) KE_max = hf - phi, which depends on frequency not intensity. (5) More intense light means more photons per second, so more electrons emitted but KE unchanged. [5]' },
+      6: { q: 'The stopping potential for photoelectrons emitted from a metal surface is 1.8 V when illuminated with light of wavelength 250 nm. (a) Show that the energy of each photon is approximately 5.0 eV. (b) Calculate the work function. (c) Calculate the threshold wavelength.', ms: '(a)(1) E = hc/lambda = 6.63e-34 x 3e8 / 250e-9 = 7.96e-19 J. (2) = 7.96e-19 / 1.6e-19 = 4.97 eV ≈ 5.0 eV [2]. (b)(1) phi = E - eV_s = 5.0 - 1.8 = 3.2 eV [1]. (c)(1) lambda_0 = hc/phi = 6.63e-34 x 3e8 / (3.2 x 1.6e-19). (2) = 388 nm [2].' },
+    },
+    'Simple harmonic motion': {
+      2: { q: 'State the two conditions required for simple harmonic motion.', ms: '(1) Acceleration is proportional to displacement from equilibrium. (2) Acceleration is directed towards the equilibrium position (opposite to displacement). [2]' },
+      3: { q: 'A mass on a spring oscillates with amplitude 0.05 m and period 0.4 s. Calculate the maximum acceleration of the mass.', ms: '(1) omega = 2pi/T = 2pi/0.4 = 15.7 rad/s. (2) a_max = omega^2 x A = 15.7^2 x 0.05. (3) = 12.3 m/s^2. [3]' },
+      4: { q: 'A pendulum of length 0.6 m is displaced by a small angle and released. (a) Calculate the period of oscillation. (b) State what happens to the period if the amplitude is doubled.', ms: '(a)(1) T = 2pi sqrt(l/g) = 2pi sqrt(0.6/9.81). (2) = 1.55 s [2]. (b) Period remains the same — period is independent of amplitude for small angles. [2]' },
+      5: { q: 'A particle undergoes SHM. Sketch graphs showing how (i) displacement, (ii) velocity, and (iii) acceleration vary with time over two complete cycles, starting from maximum positive displacement. Comment on the phase relationships.', ms: '(1) Displacement: cosine curve starting at +A [1]. (2) Velocity: negative sine curve, pi/2 behind displacement [1]. (3) Acceleration: negative cosine, pi out of phase with displacement [1]. (4) Velocity leads displacement by pi/2 [1]. (5) Acceleration is antiphase with displacement [1].' },
+    },
+    'Capacitors': {
+      2: { q: 'A 470 microfarad capacitor is charged to a potential difference of 12 V. Calculate the energy stored.', ms: '(1) E = 0.5 CV^2 = 0.5 x 470e-6 x 12^2. (2) = 0.0338 J. [2]' },
+      3: { q: 'Explain in terms of charge and electric field why the potential difference across a capacitor increases as it charges.', ms: '(1) As charge builds up on plates, the electric field between the plates increases. (2) Work must be done against this field to move further charge onto the plate. (3) Therefore potential difference = Work done per unit charge increases. [3]' },
+      4: { q: 'A 100 microfarad capacitor is charged to 20 V then discharged through a 50 kohm resistor. (a) Calculate the time constant. (b) Calculate the voltage after one time constant. (c) Calculate the charge remaining after 10 s.', ms: '(a)(1) tau = RC = 50000 x 100e-6 = 5 s [1]. (b)(1) V = V_0 e^(-1) = 20/e = 7.36 V [1]. (c)(1) Q = Q_0 e^(-t/RC) = CV_0 e^(-10/5). (2) = 100e-6 x 20 x e^(-2). (3) = 270 microC [2].' },
+    },
+    'Radioactive decay': {
+      2: { q: 'Define the term half-life of a radioactive isotope.', ms: '(1) The time taken for the activity (or number of undecayed nuclei) of a sample to fall to half its initial value. [2]' },
+      3: { q: 'A radioactive source has an initial activity of 800 Bq and a half-life of 3 days. Calculate the activity after 12 days.', ms: '(1) Number of half-lives = 12/3 = 4. (2) Activity = 800 x (1/2)^4. (3) = 50 Bq. [3]' },
+      4: { q: 'The nuclide Ra-226 decays by alpha emission to Rn-222. (a) Write a balanced nuclear equation for this decay. (b) Explain why the radon nucleus recoils after the decay.', ms: '(a)(1) 226/88 Ra -> 222/86 Rn + 4/2 He. (2) Correct nucleon and proton numbers [2]. (b)(1) By conservation of momentum, total momentum before = 0. (2) Radon and alpha must have equal and opposite momenta, so radon recoils. [2]' },
+    },
+    'Momentum & impulse': {
+      3: { q: 'A 0.5 kg ball travelling at 6 m/s collides with a wall and rebounds at 4 m/s. The contact time is 0.02 s. Calculate the average force exerted on the ball.', ms: '(1) Change in momentum = m(v-u) = 0.5(4-(-6)) = 5 Ns. (2) Taking rebound as positive direction. (3) F = delta p / t = 5 / 0.02 = 250 N. [3]' },
+      4: { q: 'A 2 kg trolley moving at 3 m/s collides and sticks to a stationary 1 kg trolley. (a) Calculate their combined velocity after collision. (b) Show this is an inelastic collision.', ms: '(a)(1) Using conservation of momentum: 2x3 = (2+1)v. (2) v = 2 m/s [2]. (b)(1) KE before = 0.5x2x9 = 9 J. (2) KE after = 0.5x3x4 = 6 J. (3) KE lost = 3 J, so inelastic [2].' },
+    },
+  },
+  maths: {
+    'Integration by parts': {
+      3: { q: 'Find the integral of x*e^x with respect to x.', ms: '(1) Let u = x, dv/dx = e^x, so du/dx = 1, v = e^x. (2) Integral = x*e^x - integral(e^x dx). (3) = x*e^x - e^x + c = e^x(x-1) + c. [3]' },
+      4: { q: 'Use integration by parts to find the integral of x*sin(2x) dx.', ms: '(1) u = x, dv = sin(2x)dx, du = dx, v = -cos(2x)/2. (2) = -x*cos(2x)/2 + integral(cos(2x)/2 dx). (3) = -x*cos(2x)/2 + sin(2x)/4 + c. (4) Correct final answer with constant. [4]' },
+      5: { q: '(a) Use integration by parts to show that the integral of ln(x) dx = x*ln(x) - x + c. (b) Hence find the exact value of the integral from 1 to e of ln(x) dx.', ms: '(a)(1) u = ln(x), dv = dx, du = 1/x dx, v = x. (2) = x*ln(x) - integral(x * 1/x dx). (3) = x*ln(x) - x + c [3]. (b)(1) [x*ln(x) - x] from 1 to e. (2) = (e - e) - (0 - 1). (3) = 1 [2].' },
+    },
+    'Binomial expansion': {
+      2: { q: 'Write down the first three terms in the expansion of (1+x)^8 in ascending powers of x.', ms: '(1) 1 + 8x + 28x^2. (2) Both second and third terms correct. [2]' },
+      3: { q: 'Find the coefficient of x^3 in the expansion of (2+3x)^5.', ms: '(1) Term is C(5,3) x 2^2 x (3x)^3. (2) = 10 x 4 x 27x^3. (3) Coefficient = 1080. [3]' },
+      4: { q: 'Expand (1 + 2x)^(-2) as a series up to and including the term in x^3, stating the values of x for which the expansion is valid.', ms: '(1) 1 + (-2)(2x) + (-2)(-3)/2! * (2x)^2 + (-2)(-3)(-4)/3! * (2x)^3. (2) = 1 - 4x + 12x^2 - 32x^3. (3) Valid for |2x| < 1, i.e. |x| < 1/2. [4]' },
+    },
+    'Normal distribution': {
+      3: { q: 'The heights of students follow a normal distribution with mean 168 cm and standard deviation 8 cm. Find the probability that a randomly selected student has height greater than 180 cm.', ms: '(1) Standardise: z = (180-168)/8 = 1.5. (2) P(Z > 1.5) = 1 - Phi(1.5). (3) = 1 - 0.9332 = 0.0668. [3]' },
+      4: { q: 'X ~ N(50, 16). Find: (a) P(X < 54), (b) P(44 < X < 58), (c) the value of a such that P(X > a) = 0.1.', ms: '(a)(1) z = (54-50)/4 = 1. P(X<54) = Phi(1) = 0.8413 [1]. (b)(1) z1 = -1.5, z2 = 2. (2) Phi(2) - Phi(-1.5) = 0.9772 - 0.0668 = 0.9104 [2]. (c)(1) P(Z > z) = 0.1, z = 1.282. (2) a = 50 + 1.282 x 4 = 55.1 [2].' },
+    },
+    'Hypothesis testing': {
+      4: { q: 'A coin is tossed 20 times and shows heads 15 times. Test at the 5% significance level whether there is evidence that the coin is biased towards heads.', ms: '(1) H0: p = 0.5, H1: p > 0.5 (one-tailed). (2) Under H0, X ~ B(20, 0.5). (3) P(X >= 15) = 1 - P(X <= 14) = 0.0207. (4) 0.0207 < 0.05 so reject H0. There is significant evidence at 5% level the coin is biased towards heads. [4]' },
+      5: { q: 'A manufacturer claims that 30% of customers prefer product A. A sample of 25 customers is taken and 4 prefer product A. Test at the 5% significance level whether there is evidence the true proportion is less than 30%.', ms: '(1) H0: p = 0.3, H1: p < 0.3. (2) Under H0, X ~ B(25, 0.3). (3) P(X <= 4) = 0.0905. (4) 0.0905 > 0.05. (5) Insufficient evidence to reject H0. Cannot conclude proportion is less than 30%. [5]' },
+    },
+    'Proof': {
+      3: { q: 'Prove that the sum of any three consecutive integers is divisible by 3.', ms: '(1) Let the integers be n, n+1, n+2. (2) Sum = 3n + 3 = 3(n+1). (3) This is divisible by 3 for all integer n. QED. [3]' },
+      4: { q: 'Prove by contradiction that the square root of 2 is irrational.', ms: '(1) Assume sqrt(2) = p/q in lowest terms (p, q integers, no common factors). (2) Then 2 = p^2/q^2, so p^2 = 2q^2, meaning p^2 is even, so p is even. (3) Write p = 2k, then 4k^2 = 2q^2, so q^2 = 2k^2, meaning q is also even. (4) But then p and q share factor 2, contradicting lowest terms assumption. Therefore sqrt(2) is irrational. [4]' },
+    },
+  },
+  biology: {
+    'Enzyme action & inhibition': {
+      2: { q: 'Explain the difference between competitive and non-competitive inhibition.', ms: '(1) Competitive: inhibitor has similar shape to substrate, binds to active site. (2) Non-competitive: inhibitor binds to allosteric site, changing shape of active site so substrate cannot bind. [2]' },
+      3: { q: 'Explain why enzyme-controlled reactions have an optimum temperature.', ms: '(1) Increasing temperature increases kinetic energy of molecules, increasing rate of enzyme-substrate collisions. (2) Above optimum, hydrogen bonds and other bonds in tertiary structure break. (3) Active site changes shape (enzyme denatured), substrate can no longer fit, rate falls sharply. [3]' },
+      4: { q: 'Describe how you could investigate the effect of pH on the rate of an enzyme-controlled reaction, including how you would control variables.', ms: '(1) Use buffer solutions to set different pH values. (2) Measure rate e.g. by time for colour change or gas production. (3) Control temperature using water bath. (4) Control substrate concentration, enzyme concentration, and volume. (5) Repeat at each pH and calculate mean. [4]' },
+    },
+    'Photosynthesis (light reactions)': {
+      2: { q: 'State where in the chloroplast the light-dependent reactions of photosynthesis take place and name the products.', ms: '(1) Thylakoid membranes (grana). (2) Products: ATP, reduced NADP (NADPH), and oxygen. [2]' },
+      3: { q: 'Describe the role of photosystems I and II in the light-dependent reactions.', ms: '(1) PSII absorbs light, electrons excited to higher energy level. (2) Water is split (photolysis) to replace lost electrons, releasing O2. (3) PSI absorbs light, electrons excited further. (4) Excited electrons used to reduce NADP to NADPH using NADP reductase. [3] (accept 3 from 4)' },
+      4: { q: 'Explain how ATP is synthesised during the light-dependent reactions of photosynthesis.', ms: '(1) Excited electrons from PSII pass along electron transport chain. (2) Energy released is used to pump H+ ions across thylakoid membrane. (3) H+ ions flow back through ATP synthase (chemiosmosis). (4) ATP synthase catalyses synthesis of ATP from ADP and Pi. [4]' },
+    },
+    'Respiration (glycolysis & Krebs)': {
+      2: { q: 'State where in the cell glycolysis occurs and give one product of glycolysis.', ms: '(1) Cytoplasm/cytosol. (2) Any one of: pyruvate, ATP (net 2), reduced NAD. [2]' },
+      3: { q: 'Describe what happens to pyruvate before it enters the Krebs cycle.', ms: '(1) Pyruvate is transported into the mitochondrial matrix. (2) Pyruvate is decarboxylated (CO2 removed) and dehydrogenated. (3) Acetyl group combines with coenzyme A to form acetyl CoA. [3]' },
+      4: { q: 'Describe the Krebs cycle and explain its importance in respiration.', ms: '(1) Acetyl CoA (2C) combines with oxaloacetate (4C) to form citrate (6C). (2) Two decarboxylations release 2 CO2. (3) Dehydrogenation reduces NAD and FAD (3 NADH, 1 FADH2 per turn). (4) Substrate-level phosphorylation produces 1 ATP. (5) Importance: regenerates oxaloacetate, produces reduced coenzymes for oxidative phosphorylation. [4]' },
+    },
+    'Immune response': {
+      3: { q: 'Describe the role of T helper cells in the specific immune response.', ms: '(1) Antigen-presenting cells display antigens on MHC proteins. (2) T helper cells with complementary receptors bind and become activated. (3) T helper cells secrete lymphokines/cytokines that stimulate B cells and cytotoxic T cells to divide and differentiate. [3]' },
+      4: { q: 'Explain how vaccination provides protection against disease.', ms: '(1) Vaccine introduces antigen (dead/attenuated pathogen or antigen alone). (2) Triggers primary immune response — B cells produce antibodies. (3) Memory cells formed (B and T memory cells). (4) On future exposure, memory cells allow rapid, large secondary immune response. (5) Pathogen destroyed before symptoms develop. [4]' },
+    },
+    'Genetic inheritance': {
+      3: { q: 'In pea plants, tall (T) is dominant over dwarf (t). Two heterozygous tall plants are crossed. Construct a genetic diagram and state the expected phenotypic ratio of offspring.', ms: '(1) Parents: Tt x Tt. Gametes: T and t from each. (2) Punnett square: TT : Tt : Tt : tt = 1:2:1. (3) Phenotypic ratio: 3 tall : 1 dwarf. [3]' },
+      4: { q: 'Explain what is meant by codominance and give an example from human genetics.', ms: '(1) Both alleles are expressed in the phenotype of a heterozygous individual. (2) Neither allele is dominant over the other. (3) Example: ABO blood group, IA and IB both expressed giving blood group AB. (4) Or sickle-cell trait: HbA and HbS both expressed. [4]' },
+    },
+  }
+};
+
+function generateQuestion() {
+  var subj  = document.getElementById('pq-subj').value;
+  var topic = document.getElementById('pq-topic').value;
+  var marks = parseInt(document.getElementById('pq-marks').value);
+
+  var area = document.getElementById('pq-question-area');
+  area.style.display = 'block';
+
+  document.getElementById('pq-markscheme-area').style.display = 'none';
+  pqMarkSchemeVisible = false;
+  document.querySelector('[onclick="toggleMarkScheme()"]').textContent = 'Show Mark Scheme';
+
+  document.getElementById('pq-card-subject').textContent = SUBJ_LABEL[subj];
+  document.getElementById('pq-card-subject').style.color = SUBJ_COLOUR[subj];
+  document.getElementById('pq-card-topic').textContent = topic;
+  document.getElementById('pq-card-marks').textContent = marks + ' mark' + (marks > 1 ? 's' : '');
+
+  // Look up question
+  var bank = QUESTION_BANK[subj] && QUESTION_BANK[subj][topic];
+  var qText, msText;
+
+  if (bank && bank[marks]) {
+    qText  = bank[marks].q;
+    msText = bank[marks].ms;
+  } else if (bank) {
+    // Find closest available mark count
+    var available = Object.keys(bank).map(Number).sort(function(a,b){return Math.abs(a-marks)-Math.abs(b-marks);});
+    qText  = bank[available[0]].q;
+    msText = bank[available[0]].ms;
+  } else {
+    // Generic question for topics without specific questions
+    qText  = generateGenericQuestion(subj, topic, marks);
+    msText = generateGenericMarkScheme(subj, topic, marks);
+  }
+
+  document.getElementById('pq-question-text').textContent = qText;
+  document.getElementById('pq-markscheme-text').textContent = msText;
+  pqCurrentQuestion  = { subj: subj, topic: topic, marks: marks, q: qText, ms: msText };
+  pqCurrentMarkScheme = msText;
+
+  // Init or reset canvas
+  setTimeout(function() {
+    if (!pqCtx) {
+      initCanvas();
+    } else {
+      pqCanvas.width = pqCanvas.offsetWidth || 700;
+      pqCtx.fillStyle = '#1a1a1a';
+      pqCtx.fillRect(0, 0, pqCanvas.width, pqCanvas.height);
+      pqHistory = [];
+    }
+  }, 50);
+
+  area.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function generateGenericQuestion(subj, topic, marks) {
+  var starters = [
+    'Describe the key features of ' + topic + '. [' + marks + ']',
+    'Explain the importance of ' + topic + ' in ' + SUBJ_LABEL[subj] + '. [' + marks + ']',
+    'State and explain ' + marks + ' point' + (marks>1?'s':'') + ' about ' + topic + '. [' + marks + ']',
+    'Outline the process of ' + topic + '. [' + marks + ']',
+  ];
+  return starters[marks % starters.length];
+}
+
+function generateGenericMarkScheme(subj, topic, marks) {
+  var ms = 'Mark scheme for ' + topic + ' (' + marks + ' marks):\n';
+  for (var i = 1; i <= marks; i++) {
+    ms += '(' + i + ') Credit one valid point about ' + topic + '. [1]\n';
+  }
+  ms += '\nNote: Accept any correct and relevant points supported by your specification knowledge.';
+  return ms;
+}
+
+function toggleMarkScheme() {
+  pqMarkSchemeVisible = !pqMarkSchemeVisible;
+  document.getElementById('pq-markscheme-area').style.display = pqMarkSchemeVisible ? 'block' : 'none';
+  document.querySelector('[onclick="toggleMarkScheme()"]').textContent = pqMarkSchemeVisible ? 'Hide Mark Scheme' : 'Show Mark Scheme';
+}
+
+function saveQuestion() {
+  if (!pqCurrentQuestion) return;
+  var saved = getSavedQuestions();
+  var canvasData = pqCanvas ? pqCanvas.toDataURL('image/png') : null;
+  var entry = {
+    id: Date.now(),
+    date: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}),
+    subj: pqCurrentQuestion.subj,
+    topic: pqCurrentQuestion.topic,
+    marks: pqCurrentQuestion.marks,
+    q: pqCurrentQuestion.q,
+    ms: pqCurrentQuestion.ms,
+    drawing: canvasData
+  };
+  saved.unshift(entry);
+  if (saved.length > 50) saved = saved.slice(0, 50);
+  localStorage.setItem('pq_saved', JSON.stringify(saved));
+  buildSavedList();
+  showToast('Question saved');
+}
+
+function discardQuestion() {
+  document.getElementById('pq-question-area').style.display = 'none';
+  pqCurrentQuestion = null;
+}
+
+function getSavedQuestions() {
+  try { return JSON.parse(localStorage.getItem('pq_saved') || '[]'); } catch(e) { return []; }
+}
+
+function buildSavedList() {
+  var saved = getSavedQuestions();
+  var container = document.getElementById('pq-saved-list');
+  if (!saved.length) {
+    container.innerHTML = '<div style="color:var(--text-dim);font-size:0.72rem;padding:0.5rem 0">No saved questions yet.</div>';
+    return;
+  }
+  container.innerHTML = saved.map(function(s, i) {
+    return '<div class="pq-saved-row" id="pq-saved-' + s.id + '">' +
+      '<div class="pq-saved-header" onclick="toggleSaved(' + s.id + ')">' +
+        '<div class="pq-saved-meta">' +
+          '<span class="pp-completed-badge" style="border-color:' + SUBJ_COLOUR[s.subj] + ';color:' + SUBJ_COLOUR[s.subj] + '">' + SUBJ_LABEL[s.subj] + '</span>' +
+          '<span style="font-size:0.78rem">' + s.topic + '</span>' +
+          '<span class="pq-marks-badge">' + s.marks + ' marks</span>' +
+          '<span class="pp-date-display">' + s.date + '</span>' +
+        '</div>' +
+        '<div style="display:flex;gap:0.4rem">' +
+          '<button class="pp-action-btn reset-btn" onclick="deleteSaved(' + s.id + ');event.stopPropagation()">X</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="pq-saved-body" id="pq-saved-body-' + s.id + '">' +
+        '<div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.08em">Question</div>' +
+        '<div class="pq-question-text" style="margin-bottom:1rem">' + s.q + '</div>' +
+        (s.drawing ? '<div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.08em">Your answer</div><img class="pq-saved-canvas-preview" src="' + s.drawing + '" alt="Your answer">' : '') +
+        '<div style="font-size:0.7rem;color:var(--green);margin-top:1rem;margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.08em">Mark Scheme</div>' +
+        '<div class="pq-question-text" style="color:var(--text-muted)">' + s.ms + '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function toggleSaved(id) {
+  var body = document.getElementById('pq-saved-body-' + id);
+  if (body) body.classList.toggle('open');
+}
+
+function deleteSaved(id) {
+  var saved = getSavedQuestions().filter(function(s) { return s.id !== id; });
+  localStorage.setItem('pq_saved', JSON.stringify(saved));
+  buildSavedList();
+}
+
+
+// PAGE SWITCHING 
+function switchPage(page) {
+ document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+ document.querySelectorAll('.app-tab').forEach(t => t.classList.remove('active'));
+ document.getElementById('page-'+page).classList.add('active');
+ document.querySelector(`.app-tab[onclick*="${page}"]`).classList.add('active');
+}
+
+function showToast(msg) {
+ const t = document.getElementById('toast');
+ t.textContent = msg;
+ t.classList.add('show');
+ setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+// INIT 
+buildTimetable();
+buildTracker();
+buildCountdownPage();
+buildPastPapersPage();
+updatePQTopics();
+buildSavedList();
+
+// Jump to current week on load
+(function() {
+ const today = new Date();
+ const start = new Date('2026-03-23');
+ const diffDays = Math.floor((today - start) / (1000 * 60 * 60 * 24));
+ const currentWeek = Math.max(0, Math.min(12, Math.floor(diffDays / 7)));
+ if (diffDays >= 0) switchWeek(currentWeek);
+ // Default to Today tab
+ switchPage('timetable');
+})();
+</script>
+</body>
+</html>
